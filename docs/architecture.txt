@@ -1,0 +1,142 @@
+Exam Proctoring App — System Architecture
+Candidate App (.exe) + Backend + Admin/Incharge Dashboard
+How the three pieces fit together, what each one is responsible for, and a suggested repo layout for each.
+System Overview
+flowchart LR
+subgraph Candidate["Candidate Machine — .exe"]
+UI[UI Layer]
+LOCK[Lockdown Engine]
+MEDIA[Media Capture]
+AI[Local AI Detection]
+BUF[Local Buffer / Queue]
+end
+subgraph Backend["Backend"]
+AUTH[Auth Service]
+ORCH[Session Orchestration]
+QBANK[Question Bank Service]
+SFU[WebRTC SFU]
+FLAG[Flag / Event Service]
+WORKERS[Analytics Workers]
+REPORT[Reporting Service]
+DB[(Postgres)]
+CACHE[(Redis)]
+STORE[(Object Storage)]
+end
+subgraph Admin["Admin / Incharge Dashboard"]
+GRID[Live Grid View]
+FOCUS[Candidate Focus View]
+ALERTS[Alerts Panel]
+REVIEW[Post-Exam Review]
+end
+UI --> LOCK --> MEDIA --> AI --> BUF
+UI -- REST --> AUTH
+UI -- REST --> QBANK
+UI -- REST --> ORCH
+BUF -- WebRTC media --> SFU
+BUF -- WebSocket flags --> FLAG
+SFU -- live stream --> GRID
+SFU --> STORE
+FLAG --> CACHE
+CACHE -- pub/sub --> ALERTS
+FLAG --> DB
+WORKERS --> DB
+WORKERS --> REPORT
+DB --> REVIEW
+REPORT --> REVIEW
+1. Frontend / Candidate App Architecture (Windows .exe)
+Process model: three cooperating processes rather than one monolith, so a crash or kill of one doesn't silently disable the others.
+Main process — UI + orchestration.
+Watchdog process — separate, lightweight, does nothing but confirm the main process and detection worker are alive; missed heartbeat triggers an auto-flag/terminate on the backend.
+Detection worker — runs the AI models, isolated so a model crash doesn't take down the exam UI.
+Layers inside the main app:
+UI Layer — login, pre-checks wizard, exam question rendering, timer, consent/clear-desk screens. (C# WPF/WinUI, or a native C++ UI if you want everything in one language.)
+Lockdown & Enforcement Layer — global keyboard/mouse hooks, full-screen/kiosk enforcement, process allow/block-list checks, window enumeration for multi-monitor detection, remote-access/VM detection, USB device monitoring.
+Media Capture Layer — webcam (Media Foundation), screen (Windows.Graphics.Capture/DXGI), microphone (WASAPI). Feeds both the local detection layer and the outbound stream.
+AI Detection Layer — face-presence, multi-face, gaze, object detection on sampled frames, run locally for low-latency flags. Talks to the main process over a local IPC channel (named pipe or local gRPC) so it can be Python or an embedded ONNX Runtime without coupling it to the UI code.
+Local Buffer & Resilience Layer — encrypted local queue for video/audio chunks and flag events; absorbs network drops and syncs once connectivity returns, so nothing is lost mid-exam.
+Networking Layer — WebRTC client (media) to the SFU, WebSocket client (flags, control commands, proctor chat), REST client (auth, question fetch, submission).
+Anti-Tamper Layer — self-integrity checks (debugger-attach detection, DLL-injection checks), periodic heartbeat to the backend.
+Session lifecycle (state machine):
+Launch → System/Bandwidth Check → Login + 2FA → Face Match →
+Consent + Clear-Desk Ack → Lockdown Engaged → Exam In Progress
+(capture + detection + streaming, continuous) → Submission →
+Lockdown Released → Local Cleanup (wipe local buffer)
+Suggested repo layout:
+ExamGuard.Client/
+├── ExamGuard.UI/            # WPF/WinUI front-end
+├── ExamGuard.Lockdown/      # hooks, kiosk mode, process/window enforcement
+├── ExamGuard.Capture/       # webcam / screen / mic capture
+├── ExamGuard.Detection/     # ONNX Runtime wrapper, or IPC to a Python worker
+├── ExamGuard.Network/       # WebRTC + WebSocket + REST clients
+├── ExamGuard.Watchdog/      # separate watchdog process
+└── ExamGuard.Installer/     # Inno Setup / MSIX packaging + code signing
+2. Backend Architecture
+Services (behind a single API gateway / Nginx):
+Auth Service — candidate/admin login, 2FA, session tokens (JWT), device-fingerprint binding.
+Session Orchestration Service — starts/tracks/ends exam sessions, timers, section locking.
+Question Bank Service — stores the question pool, handles per-candidate randomization, serves questions just-in-time and encrypted.
+WebRTC SFU (LiveKit / mediasoup / Agora) — receives live webcam/screen/audio from each candidate and fans it out to subscribing proctor dashboards; recordings are piped to object storage as they arrive.
+Flag / Event Service — ingests real-time anti-cheat events from the exe over WebSocket, persists them, and publishes to Redis pub/sub so the admin dashboard gets an instant push.
+Analytics Workers (Celery/RQ) — the heavier, non-real-time processing: cross-candidate answer-similarity clustering, aggregate risk scoring, post-exam plagiarism checks.
+Reporting Service — builds the incident timeline, generates PDF/CSV exports and evidence packages.
+Notification Service — proctor↔candidate chat, admin alerts for critical flags (email/SMS).
+Data stores:
+Postgres — candidates, sessions, questions, flags, scores, audit logs.
+Redis — live session state, pub/sub fanout for WebSocket pushes, rate limiting.
+Object storage (S3-compatible, or an Indian-hosted equivalent if data residency matters) — recordings, screenshots, evidence packages.
+Infra — Nginx/reverse proxy with TLS termination, Dockerized services, a queue (Redis/RabbitMQ) between the Flag Service and the Analytics Workers.
+Suggested repo layout:
+backend/
+├── app/
+│   ├── api/            # routers: auth, sessions, questions, flags, reports
+│   ├── services/        # business logic per domain
+│   ├── workers/         # Celery tasks (analytics, plagiarism, report gen)
+│   ├── models/           # Postgres ORM models
+│   ├── schemas/          # Pydantic schemas
+│   ├── sfu/              # WebRTC SFU integration
+│   └── core/              # config, security, db session
+├── alembic/               # migrations
+└── docker-compose.yml
+3. Website / Admin Dashboard Architecture (for the Incharge/Proctor)
+A Next.js/React app, role-gated (Admin vs. Proctor/Incharge):
+Live Monitoring Grid — subscribes to the SFU for every active candidate, thumbnail-grid view.
+Candidate Focus View — full webcam + screen feed side by side, live flag sidebar, audio toggle.
+Real-Time Alerts Panel — WebSocket-driven, color-coded by severity, click-through to that candidate's focus view.
+Proctor Controls — pause/resume/terminate a session, send a chat message, manually raise a flag.
+Post-Exam Review Module — recorded playback with a scrub bar marked at flagged timestamps, and a clip viewer for fast review.
+Reports & Export — generate/download PDF/CSV reports, evidence packages.
+Admin Console — question-bank management, candidate roster/scheduling, user/role management, retention-policy settings, audit-log viewer.
+Auth — same Auth Service as the candidate app, with role-based route guarding.
+Suggested repo layout:
+admin-dashboard/
+├── app/
+│   ├── (auth)/
+│   ├── live/              # grid + focus view
+│   ├── candidates/[id]/   # detail, review, flags
+│   ├── reports/
+│   └── settings/
+├── components/
+├── lib/                   # websocket client, api client
+└── hooks/
+4. End-to-End Session Flow
+sequenceDiagram
+participant C as Candidate .exe
+participant BE as Backend (FastAPI)
+participant SFU as WebRTC SFU
+participant D as Admin Dashboard
+C->>BE: Login + 2FA + face match
+BE-->>C: Session token + question set
+C->>SFU: Stream webcam/screen/audio
+SFU-->>D: Live feed (proctor subscribes)
+C->>BE: Local AI flag event (WebSocket)
+BE-->>D: Real-time alert (pub/sub push)
+D->>BE: Proctor pause/terminate/chat
+BE-->>C: Control command
+C->>BE: Submit exam
+BE->>BE: Run analytics workers, generate report
+BE-->>D: Report ready
+5. Deployment & Scaling Notes
+SFU is the component to scale first — media is the heaviest load; LiveKit/mediasoup can be run as its own cluster separate from the FastAPI app servers.
+Flag Service should never block on Analytics Workers — real-time flags go straight to Redis pub/sub; the heavier clustering/plagiarism work happens asynchronously and only affects the post-exam report.
+Object storage lifecycle rules should enforce your retention policy automatically (auto-expire recordings after N days) rather than relying on a manual job.
+Keep the candidate exe's backend contract versioned — anti-cheat logic will change often as bypass techniques evolve, and you don't want a client update to require a synchronized backend deploy every time.

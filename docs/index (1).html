@@ -1,0 +1,161 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><style>:root{color-scheme:light dark;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}}:root[data-theme="dark"]{color-scheme:dark;--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}:root[data-theme="light"]{color-scheme:light}@media print{:root,:root[data-theme="dark"]{color-scheme:light;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}}body{background:var(--md-bg);color:var(--md-text);max-width:720px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:10px;font:14px/1.55 -apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;overflow-wrap:break-word}body>:first-child{margin-top:0}h1,h2,h3,h4,h5,h6{margin:6px 0 0;line-height:1.25;font-weight:600;text-wrap:balance}h1{font-size:1.35em}h2{font-size:1.15em;color:var(--md-muted)}h3,h4,h5,h6{font-size:1em}p,ul,ol,blockquote,table,pre,hr{margin:0}strong{font-weight:600}a{color:var(--md-link);text-decoration:none}a:hover{text-decoration:underline}ul,ol{display:flex;flex-direction:column;gap:6px;padding-left:22px}ul{list-style:disc}ol{list-style:decimal}:is(li,td,th)>*+:is(p,ul,ol,blockquote){margin-top:6px}blockquote{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--md-rule);padding-left:10px;color:var(--md-muted)}:not(pre)>code{background:var(--md-fill);padding:1px 3px;border-radius:4px;font:.92em 'SF Mono',ui-monospace,Menlo,Consolas,monospace}a>code{background:none;color:inherit}pre{background:var(--md-fill);padding:10px 12px;border-radius:6px;overflow-x:auto;font:12px/1.5 'SF Mono',ui-monospace,Menlo,Consolas,monospace;margin-block:4px}pre code{background:none;padding:0;font:inherit}table{width:100%;border-collapse:separate;border-spacing:2px;font:inherit}th,td{padding:6px 8px;border-radius:3px;text-align:left;vertical-align:top}th{background:var(--md-fill-strong);font-weight:600}td{background:var(--md-fill)}:is(th,td) :not(pre)>code{background:transparent}hr{border:0;border-top:1px solid var(--md-rule-strong);margin-block:10px}img{max-width:100%;height:auto;border-radius:4px}</style>
+</head><body>
+<h1>Interview &amp; Exam Proctoring App (Windows .exe)</h1>
+<h2>Complete Anti-Cheat Feature Specification</h2>
+<p>A full breakdown of the features for a Windows desktop exam/interview integrity application, organized by category, plus build priorities and a tech stack mapping.</p>
+<hr>
+<h2>1. Identity &amp; Access Verification</h2>
+<ul>
+<li><strong>Periodic re-verification</strong> — random face-match checks every few minutes during the exam, not just at login.</li>
+<li><strong>Liveness detection</strong> — a blink/head-turn challenge to block someone using a photo or a pre-recorded video as a fake feed.</li>
+<li><strong>Two-factor authentication</strong> — OTP/email/app-based second factor before the exam unlocks.</li>
+<li><strong>Single active session enforcement</strong> — block the same account from logging in on a second device simultaneously.</li>
+<li><strong>Device fingerprinting</strong> — bind the session to one specific machine.</li>
+</ul>
+<h2>2. Webcam Monitoring &amp; Computer Vision</h2>
+<ul>
+<li><strong>Continuous webcam recording</strong> for the full exam duration.</li>
+<li><strong>Face-presence detection</strong> — flags the moment no face is visible in frame.</li>
+<li><strong>Multiple-face detection</strong> — flags if more than one person appears.</li>
+<li><strong>Gaze/eye-tracking</strong> — detects sustained looking away from the screen.</li>
+<li><strong>Object detection in frame</strong> — phone, book, smartwatch, second monitor, earphones, another person.</li>
+<li><strong>Randomized snapshot capture</strong> at intervals, independent of the continuous recording, for the audit trail.</li>
+<li><strong>Per-frame anomaly confidence score</strong>, feeding into an overall integrity score.</li>
+</ul>
+<h2>3. Screen Monitoring &amp; Recording</h2>
+<ul>
+<li><strong>Full-screen recording</strong> for the entire session.</li>
+<li><strong>Live screen-share stream</strong> to a proctor/admin dashboard.</li>
+<li><strong>Randomized screenshot capture</strong> in addition to continuous recording.</li>
+<li><strong>Multi-monitor detection</strong> — flags or blocks candidates with more than one display connected.</li>
+<li><strong>Remote-access/mirroring software detection</strong> — TeamViewer, AnyDesk, Chrome Remote Desktop, etc.</li>
+<li><strong>Virtual machine / sandbox detection</strong> — stops candidates running the exe in a VM to dodge lockdown controls.</li>
+<li><strong>Screen-recording software detection</strong> on the candidate's machine (OBS, Bandicam, etc.).</li>
+</ul>
+<h2>4. App &amp; Device Lockdown</h2>
+<ul>
+<li><strong>Full-screen kiosk mode</strong> that can't be minimized.</li>
+<li><strong>Alt-Tab / window-switch interception and blocking.</strong></li>
+<li><strong>Taskbar, notification center, and system-tray suppression</strong> during the exam.</li>
+<li><strong>Copy/paste disabled</strong>, both into and out of the exam window.</li>
+<li><strong>Right-click and dev-tools disabled.</strong></li>
+<li><strong>Keyboard-shortcut blocking</strong> — Windows key, Print Screen, Ctrl+Alt+Del handling, Ctrl+N/T equivalents.</li>
+<li><strong>App allow-list / block-list</strong> — auto-flag or force-close disallowed background apps (Discord, WhatsApp, Zoom, screen recorders, etc.).</li>
+<li><strong>Single running-instance enforcement</strong> — the exe refuses to launch a second copy or a second exam session.</li>
+<li><strong>Notification suppression</strong> — silence calls, messages, and OS notifications for the session.</li>
+<li><strong>USB/external-device monitoring</strong> — flags a keyboard, mouse, or storage device plugged in mid-exam.</li>
+</ul>
+<h2>5. Audio Monitoring</h2>
+<ul>
+<li><strong>Continuous microphone capture</strong>, recorded alongside video.</li>
+<li><strong>Multi-voice detection</strong> — flags a second person speaking nearby.</li>
+<li><strong>Background-noise anomaly detection</strong> — typing on another device, whispering, a muted call.</li>
+<li><strong>Optional keyword/phrase spotting</strong> for flagged terms.</li>
+<li><strong>Configurable talk-aloud vs. silent modes</strong> (interviews vs. written exams have different audio baselines).</li>
+</ul>
+<h2>6. Network &amp; Session Security</h2>
+<ul>
+<li><strong>IP logging and geofencing</strong> — flag or block access from outside an approved region.</li>
+<li><strong>VPN/proxy detection and blocking.</strong></li>
+<li><strong>Session-token binding</strong> to a single machine fingerprint, so a login can't be shared mid-exam.</li>
+<li><strong>Auto-pause/resume on network drops</strong>, with a timestamped disconnect log.</li>
+<li><strong>Encrypted media transport</strong> (WebRTC/SRTP or equivalent) for video/audio/screen streams.</li>
+</ul>
+<h2>7. Behavioral Analytics &amp; AI Risk Scoring</h2>
+<ul>
+<li><strong>Keystroke-dynamics analysis</strong> — typing rhythm anomalies vs. the candidate's own baseline.</li>
+<li><strong>Mouse-movement pattern analysis</strong> — unnatural pauses, scripted movement, prolonged idle time.</li>
+<li><strong>Focus-loss counter</strong> — every time the exam window loses focus, log the duration and count.</li>
+<li><strong>Time-per-question anomaly detection</strong> — suspiciously fast or uniform response times.</li>
+<li><strong>Copy/paste attempt logging</strong>, even when the action is blocked at the OS level.</li>
+<li><strong>Aggregate AI risk score</strong> per candidate, combining every signal above into one number.</li>
+<li><strong>Answer-similarity / plagiarism detection</strong> across the candidate pool and against known external sources.</li>
+<li><strong>Cross-candidate clustering</strong> to catch coordinated cheating rings — same answers, same anomaly pattern, same IP block.</li>
+</ul>
+<h2>8. Exam Content Security</h2>
+<ul>
+<li><strong>Randomized question order and answer-option order</strong> per candidate.</li>
+<li><strong>Large question banks with randomized subset selection</strong> so no two candidates see an identical paper.</li>
+<li><strong>Section-level time-boxing</strong> — no going back once a section's timer ends.</li>
+<li><strong>Per-candidate watermarking</strong> of on-screen content (name/ID overlay) to deter screenshot sharing.</li>
+<li><strong>Screenshot/recording prevention at the OS level</strong> — e.g. <code>SetWindowDisplayAffinity</code> to exclude the exam window from screen captures.</li>
+<li><strong>Printing disabled.</strong></li>
+<li><strong>Just-in-time encrypted question delivery</strong> — never bundle the full question set client-side.</li>
+</ul>
+<h2>9. Live Human Proctoring</h2>
+<ul>
+<li><strong>Grid-view live dashboard</strong> so one proctor can watch several candidates at once.</li>
+<li><strong>Real-time AI-flag alerts</strong> pushed to the proctor the instant a signal fires.</li>
+<li><strong>In-session chat/messaging</strong> between proctor and candidate.</li>
+<li><strong>Remote pause/terminate/flag controls</strong> for the proctor.</li>
+<li><strong>Recorded-session playback with clickable, timestamped flags</strong> for fast review.</li>
+<li><strong>Auto-generated incident reports</strong> summarizing every flagged event per candidate.</li>
+</ul>
+<h2>10. Pre-Exam Setup &amp; Environment Checks</h2>
+<ul>
+<li><strong>System compatibility check</strong> — webcam, mic, OS version, screen resolution.</li>
+<li><strong>Bandwidth/connection-speed test.</strong></li>
+<li><strong>Guided practice run</strong> before the real exam starts.</li>
+<li><strong>&quot;Clear desk&quot; checklist</strong> the candidate must actively confirm — no phone, no notes, no second screen.</li>
+<li><strong>Terms-of-conduct acknowledgment and consent capture</strong> before recording begins.</li>
+</ul>
+<h2>11. Post-Exam Review &amp; Reporting</h2>
+<ul>
+<li><strong>Automated event timeline</strong> — every flagged incident with a timestamp and severity level.</li>
+<li><strong>Auto-extracted video/audio clips</strong> around each flagged event, for fast review instead of scrubbing the full recording.</li>
+<li><strong>Final integrity/trust score</strong> per candidate.</li>
+<li><strong>Downloadable PDF/CSV reports</strong> for HR, admissions, or academic staff.</li>
+<li><strong>Exportable evidence package</strong> (video + logs) for disputes or appeals.</li>
+</ul>
+<h2>12. Legal, Privacy &amp; Compliance</h2>
+<ul>
+<li><strong>Explicit consent capture</strong> before any recording starts — required under India's DPDP Act, and GDPR if you'll have EU users.</li>
+<li><strong>Configurable data-retention policy</strong> (e.g. auto-delete recordings after 90 days).</li>
+<li><strong>Encryption in transit and at rest</strong> for all stored video/audio.</li>
+<li><strong>Role-based access control and audit logs</strong> for who viewed a candidate's recording and when.</li>
+<li><strong>Documented right-to-deletion / data-access-request workflow.</strong></li>
+<li><strong>Clear upfront disclosure</strong> of exactly what's monitored — this both satisfies compliance and reduces candidate disputes.</li>
+</ul>
+<h2>13. Accessibility &amp; Candidate Experience</h2>
+<ul>
+<li><strong>Alternative verification paths</strong> for candidates who can't use a webcam/mic, with a documented accommodation process.</li>
+<li><strong>Configurable accommodations</strong> — extended time, alternate formats, per candidate.</li>
+<li><strong>Clear pre-exam instructions and a non-graded practice test.</strong></li>
+<li><strong>Low-bandwidth fallback mode</strong> (reduced video quality) instead of an outright block, with an audit note explaining the fallback.</li>
+</ul>
+<hr>
+<h2>Suggested Build Priorities</h2>
+<p><strong>MVP (Phase 1) — a usable exam flow with baseline integrity</strong></p>
+<ul>
+<li>Live face match at login, basic face-presence check</li>
+<li>Full-session webcam + screen recording (record now, review later — no real-time AI needed yet)</li>
+<li>Full-screen kiosk lockdown, tab-switch/copy-paste blocking</li>
+<li>Focus-loss and app-switch logging</li>
+<li>Randomized question/answer order</li>
+<li>Consent capture + a simple flag list and recording links for reporting</li>
+</ul>
+<p><strong>Phase 2 — real-time detection</strong></p>
+<ul>
+<li>Live face-count / gaze / object detection via a lightweight model</li>
+<li>Multi-monitor and remote-access-software detection</li>
+<li>Background app allow/block-list enforcement</li>
+<li>Live proctor dashboard with real-time alerts</li>
+<li>Network/IP/VPN checks</li>
+</ul>
+<p><strong>Phase 3 — advanced analytics</strong></p>
+<ul>
+<li>Keystroke/mouse behavioral analysis and AI risk scoring</li>
+<li>Answer-similarity / plagiarism clustering across candidates</li>
+<li>Full evidence-export and dispute workflow</li>
+<li>Multi-region compliance tooling</li>
+</ul>
+<h2>Suggested Tech Stack</h2>
+<ul>
+<li><strong>Windows client (.exe):</strong> low-level keyboard/mouse hooks (<code>WH_KEYBOARD_LL</code>) to block Alt-Tab/Windows key, Windows Kiosk/Assigned Access mode or a custom shell replacement, <code>Windows.Graphics.Capture</code>/DXGI for screen recording, <code>SetWindowDisplayAffinity</code> to block screen-capture of the exam window itself, WMI queries to detect remote-access or VM software, and a native webcam/mic capture layer (Media Foundation or OpenCV via a Python/C++ bridge if you want to reuse your existing ML code).</li>
+<li><strong>Backend:</strong> FastAPI for session orchestration, a WebRTC signaling layer (or a hosted service like LiveKit/Agora) for live webcam/screen streams to the proctor dashboard, Celery/RQ for post-processing recordings and generating incident reports, Postgres for candidate/session/flag data.</li>
+<li><strong>Proctor dashboard:</strong> Next.js/React consuming the live WebRTC streams and a flag/alert WebSocket feed.</li>
+<li><strong>AI detection models:</strong> face detection/liveness (MediaPipe or a hosted API), object detection (a small YOLO variant) — run locally inside the exe for low-latency flags (face presence, multi-face, gaze) and server-side on sampled frames for the heavier checks (plagiarism clustering, risk scoring) to keep the client lightweight.</li>
+<li><strong>Packaging/distribution:</strong> sign the exe (code-signing certificate) so it isn't flagged by Windows SmartScreen/antivirus, and consider an auto-update mechanism (e.g. Squirrel.Windows or a custom updater) since anti-cheat logic will need frequent patching as bypass techniques evolve.</li>
+</ul>
+
+</body></html>

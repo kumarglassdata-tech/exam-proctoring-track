@@ -1,0 +1,1002 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><style>:root{color-scheme:light dark;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}}:root[data-theme="dark"]{color-scheme:dark;--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}:root[data-theme="light"]{color-scheme:light}@media print{:root,:root[data-theme="dark"]{color-scheme:light;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}}body{background:var(--md-bg);color:var(--md-text);max-width:720px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:10px;font:14px/1.55 -apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;overflow-wrap:break-word}body>:first-child{margin-top:0}h1,h2,h3,h4,h5,h6{margin:6px 0 0;line-height:1.25;font-weight:600;text-wrap:balance}h1{font-size:1.35em}h2{font-size:1.15em;color:var(--md-muted)}h3,h4,h5,h6{font-size:1em}p,ul,ol,blockquote,table,pre,hr{margin:0}strong{font-weight:600}a{color:var(--md-link);text-decoration:none}a:hover{text-decoration:underline}ul,ol{display:flex;flex-direction:column;gap:6px;padding-left:22px}ul{list-style:disc}ol{list-style:decimal}:is(li,td,th)>*+:is(p,ul,ol,blockquote){margin-top:6px}blockquote{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--md-rule);padding-left:10px;color:var(--md-muted)}:not(pre)>code{background:var(--md-fill);padding:1px 3px;border-radius:4px;font:.92em 'SF Mono',ui-monospace,Menlo,Consolas,monospace}a>code{background:none;color:inherit}pre{background:var(--md-fill);padding:10px 12px;border-radius:6px;overflow-x:auto;font:12px/1.5 'SF Mono',ui-monospace,Menlo,Consolas,monospace;margin-block:4px}pre code{background:none;padding:0;font:inherit}table{width:100%;border-collapse:separate;border-spacing:2px;font:inherit}th,td{padding:6px 8px;border-radius:3px;text-align:left;vertical-align:top}th{background:var(--md-fill-strong);font-weight:600}td{background:var(--md-fill)}:is(th,td) :not(pre)>code{background:transparent}hr{border:0;border-top:1px solid var(--md-rule-strong);margin-block:10px}img{max-width:100%;height:auto;border-radius:4px}</style>
+</head><body>
+<h1>Software Requirements Specification</h1>
+<h2>Interview &amp; Exam Proctoring System</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>September 26, 2026</td>
+</tr>
+<tr>
+<td><strong>Prepared by</strong></td>
+<td>Charan</td>
+</tr>
+<tr>
+<td><strong>Components covered</strong></td>
+<td>Candidate client (.exe), Backend, Admin/Incharge Dashboard</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>1. Introduction</h2>
+<h3>1.1 Purpose</h3>
+<p>This document specifies the functional and non-functional requirements, system architecture, technology stack, AI models, API contract, and data model for the Interview &amp; Exam Proctoring System — a Windows desktop exam client with real-time anti-cheat detection, a backend service layer, and a web dashboard for the proctor/incharge to observe and manage live exams.</p>
+<h3>1.2 Scope</h3>
+<p>The system lets an organization run remote exams/interviews where:</p>
+<ul>
+<li>A candidate installs and runs a locked-down Windows <strong>.exe</strong> client to take the exam.</li>
+<li>The client detects and reports cheating signals (webcam, screen, audio, app/process activity) in real time.</li>
+<li>A <strong>proctor/incharge</strong> watches live candidates and post-exam recordings from a web dashboard, and can intervene.</li>
+<li>A <strong>backend</strong> orchestrates sessions, stores data, runs heavier analytics, and generates reports.</li>
+</ul>
+<p>Out of scope for v1: Android/mobile client, browser-only (non-installed) exam mode, and non-Windows operating systems.</p>
+<h3>1.3 Definitions &amp; Acronyms</h3>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Candidate</td>
+<td>The person taking the exam</td>
+</tr>
+<tr>
+<td>Incharge / Proctor</td>
+<td>The person monitoring exams from the admin dashboard</td>
+</tr>
+<tr>
+<td>SFU</td>
+<td>Selective Forwarding Unit — WebRTC media relay server</td>
+</tr>
+<tr>
+<td>Flag</td>
+<td>A recorded anti-cheat event/anomaly</td>
+</tr>
+<tr>
+<td>Integrity Score</td>
+<td>Aggregate risk score computed from all flags for a session</td>
+</tr>
+<tr>
+<td>JIT</td>
+<td>Just-in-time (question delivery, decrypted only when needed)</td>
+</tr>
+</tbody>
+</table>
+<h3>1.4 Intended Audience</h3>
+<p>Developer(s) building and maintaining the system; this doc is the single reference for what to build, in what stack, and how the pieces talk to each other.</p>
+<hr>
+<h2>2. Overall Description</h2>
+<h3>2.1 Product Perspective</h3>
+<p>Three cooperating components:</p>
+<ol>
+<li><strong>Candidate App</strong> — native Windows .exe, runs on the candidate's machine, enforces lockdown and captures/analyzes media locally.</li>
+<li><strong>Backend</strong> — FastAPI services + workers + datastores, the source of truth for sessions, questions, flags, and reports.</li>
+<li><strong>Admin/Incharge Dashboard</strong> — Next.js web app for proctors and admins to watch, intervene, and review.</li>
+</ol>
+<h3>2.2 User Classes</h3>
+<table>
+<thead>
+<tr>
+<th>User Class</th>
+<th>Description</th>
+<th>Primary Interface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Candidate</td>
+<td>Takes the exam under monitoring</td>
+<td>Windows .exe</td>
+</tr>
+<tr>
+<td>Proctor / Incharge</td>
+<td>Watches live exams, can pause/terminate/chat</td>
+<td>Web dashboard</td>
+</tr>
+<tr>
+<td>Admin</td>
+<td>Manages question banks, users, retention policy, reports</td>
+<td>Web dashboard</td>
+</tr>
+<tr>
+<td>System</td>
+<td>Automated analytics/report generation</td>
+<td>Backend workers</td>
+</tr>
+</tbody>
+</table>
+<h3>2.3 Operating Environment</h3>
+<ul>
+<li><strong>Candidate side:</strong> Windows 10/11, x64, webcam + microphone required, broadband internet.</li>
+<li><strong>Server side:</strong> Linux containers (Docker), cloud or on-prem hosting.</li>
+<li><strong>Admin dashboard:</strong> any modern browser (Chrome/Edge/Firefox).</li>
+</ul>
+<h3>2.4 Design &amp; Implementation Constraints</h3>
+<ul>
+<li>Candidate client must be a single distributable, code-signed .exe (no Android/mobile build).</li>
+<li>All media and flag data in transit must be encrypted (TLS/SRTP).</li>
+<li>Must support India's DPDP Act consent and data-handling requirements.</li>
+</ul>
+<h3>2.5 Assumptions &amp; Dependencies</h3>
+<ul>
+<li>Candidates have a Windows machine with an internal or external webcam and mic meeting minimum resolution/quality.</li>
+<li>A third-party WebRTC SFU (self-hosted LiveKit/mediasoup, or a hosted provider like Agora) is available.</li>
+<li>Reliable internet at the candidate's location; the client degrades gracefully (local buffering) on brief drops.</li>
+</ul>
+<hr>
+<h2>3. Technology Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Candidate client core</td>
+<td>C++ / C# (.NET, WPF)</td>
+<td>Lockdown engine: hooks, kiosk mode, process/window enforcement</td>
+</tr>
+<tr>
+<td>Candidate client AI runtime</td>
+<td>ONNX Runtime (C++/C#), or a Python worker via local IPC</td>
+<td>Runs local detection models</td>
+</tr>
+<tr>
+<td>Candidate media capture</td>
+<td>Media Foundation, <code>Windows.Graphics.Capture</code>/DXGI, WASAPI</td>
+<td>Webcam, screen, and microphone capture</td>
+</tr>
+<tr>
+<td>Candidate packaging</td>
+<td>Inno Setup / MSIX, code-signing certificate</td>
+<td>Installer &amp; distribution</td>
+</tr>
+<tr>
+<td>Backend API</td>
+<td>FastAPI (Python)</td>
+<td>REST + WebSocket services</td>
+</tr>
+<tr>
+<td>Backend async jobs</td>
+<td>Celery or RQ + Redis broker</td>
+<td>Analytics workers, report generation</td>
+</tr>
+<tr>
+<td>Backend media relay</td>
+<td>LiveKit / mediasoup / Agora (WebRTC SFU)</td>
+<td>Live webcam/screen/audio relay to proctors</td>
+</tr>
+<tr>
+<td>Primary database</td>
+<td>PostgreSQL</td>
+<td>Candidates, sessions, questions, flags, reports</td>
+</tr>
+<tr>
+<td>Cache / pub-sub</td>
+<td>Redis</td>
+<td>Live session state, WebSocket fanout, rate limiting</td>
+</tr>
+<tr>
+<td>Object storage</td>
+<td>S3-compatible (AWS S3 or an Indian-hosted equivalent)</td>
+<td>Recordings, screenshots, evidence packages</td>
+</tr>
+<tr>
+<td>Admin dashboard</td>
+<td>Next.js / React</td>
+<td>Proctor/Incharge and Admin web UI</td>
+</tr>
+<tr>
+<td>Reverse proxy</td>
+<td>Nginx</td>
+<td>TLS termination, routing</td>
+</tr>
+<tr>
+<td>Containerization</td>
+<td>Docker / docker-compose</td>
+<td>Deployment</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>4. AI / ML Models</h2>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Model / Approach</th>
+<th>Library</th>
+<th>Runs Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Face match (identity verification)</td>
+<td>ArcFace / FaceNet embeddings + cosine similarity</td>
+<td>ONNX Runtime</td>
+<td>Local (client)</td>
+</tr>
+<tr>
+<td>Liveness detection</td>
+<td>Anti-spoofing model or blink/head-turn challenge-response</td>
+<td>ONNX Runtime</td>
+<td>Local (client)</td>
+</tr>
+<tr>
+<td>Face-presence &amp; multi-face detection</td>
+<td>Lightweight face detector (RetinaFace-mobile / MediaPipe Face Detection)</td>
+<td>ONNX Runtime / MediaPipe</td>
+<td>Local (client)</td>
+</tr>
+<tr>
+<td>Gaze / eye tracking</td>
+<td>MediaPipe Iris or a similar landmark-based gaze model</td>
+<td>MediaPipe / ONNX</td>
+<td>Local (client)</td>
+</tr>
+<tr>
+<td>Object detection (phone, book, second person, earphones)</td>
+<td>YOLOv8n (nano variant, for low latency)</td>
+<td>ONNX Runtime</td>
+<td>Local (client)</td>
+</tr>
+<tr>
+<td>Keystroke-dynamics anomaly</td>
+<td>Statistical/ML classifier trained on the candidate's own typing baseline</td>
+<td>scikit-learn</td>
+<td>Server-side (batch)</td>
+</tr>
+<tr>
+<td>Mouse-movement anomaly</td>
+<td>Isolation Forest or autoencoder on movement features</td>
+<td>scikit-learn / PyTorch</td>
+<td>Server-side (batch)</td>
+</tr>
+<tr>
+<td>Answer similarity / plagiarism</td>
+<td>Sentence embeddings + cosine-similarity clustering</td>
+<td>sentence-transformers</td>
+<td>Server-side (Analytics Workers)</td>
+</tr>
+<tr>
+<td>Aggregate risk scoring</td>
+<td>Weighted rule-based score initially, evolving to a trained classifier</td>
+<td>XGBoost / LightGBM</td>
+<td>Server-side (Analytics Workers)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Design note:</strong> anything that needs to flag within the exam session (face, gaze, objects) runs <strong>locally</strong> in the client for low latency and to keep bandwidth down — only the flag event, not raw video, needs to reach the backend in real time. Anything that benefits from looking across many candidates or the full recording (plagiarism, risk scoring, keystroke baselines) runs <strong>server-side</strong>, asynchronously.</p>
+<hr>
+<h2>5. Functional Requirements</h2>
+<h3>5.1 Identity &amp; Access Verification</h3>
+<ul>
+<li><strong>FR-1.1</strong> The system shall capture a live selfie and match it against the candidate's registered profile photo before allowing exam entry.</li>
+<li><strong>FR-1.2</strong> The system shall re-verify the candidate's identity at random intervals during the exam, no less frequently than every 10 minutes.</li>
+<li><strong>FR-1.3</strong> The system shall perform liveness detection to reject a static photo or replayed video as the camera input.</li>
+<li><strong>FR-1.4</strong> The system shall require two-factor authentication before unlocking the exam.</li>
+<li><strong>FR-1.5</strong> The system shall reject a login attempt for an account with an already-active session elsewhere.</li>
+<li><strong>FR-1.6</strong> The system shall bind a session to a single device fingerprint for its duration.</li>
+</ul>
+<h3>5.2 Webcam Monitoring</h3>
+<ul>
+<li><strong>FR-2.1</strong> The system shall record continuous webcam video for the full session duration.</li>
+<li><strong>FR-2.2</strong> The system shall flag when no face is detected in frame for longer than a configurable threshold.</li>
+<li><strong>FR-2.3</strong> The system shall flag when more than one face is detected in frame.</li>
+<li><strong>FR-2.4</strong> The system shall flag sustained gaze away from the screen.</li>
+<li><strong>FR-2.5</strong> The system shall flag detected prohibited objects (phone, book, second screen, earphones) in frame.</li>
+<li><strong>FR-2.6</strong> The system shall capture randomized snapshots independent of continuous recording, for audit purposes.</li>
+</ul>
+<h3>5.3 Screen Monitoring</h3>
+<ul>
+<li><strong>FR-3.1</strong> The system shall record the full screen for the session duration.</li>
+<li><strong>FR-3.2</strong> The system shall stream the screen live to the proctor dashboard.</li>
+<li><strong>FR-3.3</strong> The system shall detect and flag additional connected monitors.</li>
+<li><strong>FR-3.4</strong> The system shall detect and flag known remote-access/mirroring software running on the machine.</li>
+<li><strong>FR-3.5</strong> The system shall detect indicators of the client running inside a virtual machine or sandbox.</li>
+</ul>
+<h3>5.4 App &amp; Device Lockdown</h3>
+<ul>
+<li><strong>FR-4.1</strong> The system shall enforce full-screen kiosk mode for the duration of the exam.</li>
+<li><strong>FR-4.2</strong> The system shall intercept and block window/task switching.</li>
+<li><strong>FR-4.3</strong> The system shall block copy/paste into and out of the exam window.</li>
+<li><strong>FR-4.4</strong> The system shall block prohibited keyboard shortcuts (Windows key, Print Screen, etc.).</li>
+<li><strong>FR-4.5</strong> The system shall detect and flag/close disallowed background applications per a configurable block-list.</li>
+<li><strong>FR-4.6</strong> The system shall prevent more than one instance of the client, or more than one active exam session, from running simultaneously.</li>
+<li><strong>FR-4.7</strong> The system shall suppress OS notifications for the session duration.</li>
+</ul>
+<h3>5.5 Audio Monitoring</h3>
+<ul>
+<li><strong>FR-5.1</strong> The system shall record continuous microphone audio for the session duration.</li>
+<li><strong>FR-5.2</strong> The system shall flag detection of a second voice.</li>
+<li><strong>FR-5.3</strong> The system shall flag anomalous background noise patterns.</li>
+</ul>
+<h3>5.6 Network &amp; Session Security</h3>
+<ul>
+<li><strong>FR-6.1</strong> The system shall log the candidate's IP address and flag access from outside an approved region, if geofencing is configured.</li>
+<li><strong>FR-6.2</strong> The system shall detect and block known VPN/proxy usage.</li>
+<li><strong>FR-6.3</strong> The system shall buffer session data locally and resume upload automatically after a network interruption, without data loss.</li>
+</ul>
+<h3>5.7 Behavioral Analytics &amp; Risk Scoring</h3>
+<ul>
+<li><strong>FR-7.1</strong> The system shall log every window-focus loss with its duration.</li>
+<li><strong>FR-7.2</strong> The system shall log every blocked copy/paste attempt.</li>
+<li><strong>FR-7.3</strong> The system shall compute an aggregate integrity/risk score per session from all recorded signals.</li>
+<li><strong>FR-7.4</strong> The system shall detect unusually high similarity between candidates' answers.</li>
+</ul>
+<h3>5.8 Exam Content Security</h3>
+<ul>
+<li><strong>FR-8.1</strong> The system shall randomize question order and answer-option order per candidate.</li>
+<li><strong>FR-8.2</strong> The system shall deliver questions just-in-time and encrypted, never bundling the full set client-side.</li>
+<li><strong>FR-8.3</strong> The system shall prevent screenshot capture of the exam window at the OS level where supported.</li>
+<li><strong>FR-8.4</strong> The system shall disable printing during the exam.</li>
+</ul>
+<h3>5.9 Live Proctoring</h3>
+<ul>
+<li><strong>FR-9.1</strong> The system shall provide a live grid view of all active candidates to the proctor.</li>
+<li><strong>FR-9.2</strong> The system shall push real-time flag alerts to the proctor dashboard.</li>
+<li><strong>FR-9.3</strong> The system shall allow a proctor to message a candidate during the exam.</li>
+<li><strong>FR-9.4</strong> The system shall allow a proctor to pause, resume, or terminate a candidate's session remotely.</li>
+</ul>
+<h3>5.10 Pre-Exam Setup</h3>
+<ul>
+<li><strong>FR-10.1</strong> The system shall run a system compatibility and bandwidth check before allowing exam start.</li>
+<li><strong>FR-10.2</strong> The system shall present a &quot;clear desk&quot; checklist the candidate must actively confirm.</li>
+<li><strong>FR-10.3</strong> The system shall capture explicit recording consent before any capture begins.</li>
+</ul>
+<h3>5.11 Post-Exam Reporting</h3>
+<ul>
+<li><strong>FR-11.1</strong> The system shall generate a timestamped timeline of all flagged events per session.</li>
+<li><strong>FR-11.2</strong> The system shall produce a downloadable PDF/CSV report per session.</li>
+<li><strong>FR-11.3</strong> The system shall support exporting a full evidence package (recordings + logs) for a session.</li>
+</ul>
+<hr>
+<h2>6. Backend API Specification</h2>
+<h3>6.1 Auth Service</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/register</code></td>
+<td>Register a new candidate account</td>
+<td>None</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/login</code></td>
+<td>Authenticate, returns JWT</td>
+<td>None</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/verify-otp</code></td>
+<td>Verify 2FA code</td>
+<td>Session token</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/refresh</code></td>
+<td>Refresh an expiring JWT</td>
+<td>Refresh token</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/logout</code></td>
+<td>Invalidate current session</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/me</code></td>
+<td>Return authenticated user's profile</td>
+<td>JWT</td>
+</tr>
+</tbody>
+</table>
+<h3>6.2 Identity Verification</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/identity/profile-photo</code></td>
+<td>Upload/replace registered profile photo</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/identity/verify</code></td>
+<td>Live face-match check at session start</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/identity/reverify</code></td>
+<td>Periodic re-verification mid-session</td>
+<td>JWT</td>
+</tr>
+</tbody>
+</table>
+<h3>6.3 Session Orchestration</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/sessions</code></td>
+<td>Start a new exam session</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/sessions/{id}</code></td>
+<td>Get session status/details</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/sessions/{id}/heartbeat</code></td>
+<td>Watchdog liveness ping</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/sessions/{id}/pause</code></td>
+<td>Proctor pauses a session</td>
+<td>JWT (proctor/admin)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/sessions/{id}/resume</code></td>
+<td>Proctor resumes a session</td>
+<td>JWT (proctor/admin)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/sessions/{id}/terminate</code></td>
+<td>Force-end a session</td>
+<td>JWT (proctor/admin)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/sessions/{id}/submit</code></td>
+<td>Candidate submits the exam</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/sessions/active</code></td>
+<td>List all active sessions</td>
+<td>JWT (proctor/admin)</td>
+</tr>
+</tbody>
+</table>
+<h3>6.4 Question Bank</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/exams/{exam_id}/config</code></td>
+<td>Exam metadata — duration, sections, rules</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/sessions/{id}/next-question</code></td>
+<td>Fetch next question, encrypted, JIT</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/sessions/{id}/answer</code></td>
+<td>Submit an answer</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/questions</code></td>
+<td>Create a question</td>
+<td>JWT (admin)</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/admin/questions/{id}</code></td>
+<td>Edit a question</td>
+<td>JWT (admin)</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/questions/{id}</code></td>
+<td>Remove a question</td>
+<td>JWT (admin)</td>
+</tr>
+</tbody>
+</table>
+<h3>6.5 Flags / Events</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/sessions/{id}/flags</code></td>
+<td>Client reports a detected anomaly</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/sessions/{id}/flags</code></td>
+<td>List flags for a session</td>
+<td>JWT (proctor/admin)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/sessions/{id}/flags/manual</code></td>
+<td>Proctor manually raises a flag</td>
+<td>JWT (proctor/admin)</td>
+</tr>
+<tr>
+<td>WS</td>
+<td><code>/ws/flags/{session_id}</code></td>
+<td>Real-time flag stream to the dashboard</td>
+<td>JWT</td>
+</tr>
+</tbody>
+</table>
+<h3>6.6 Media</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/media/token</code></td>
+<td>Issue a short-lived WebRTC join token</td>
+<td>JWT</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/media/recordings/{session_id}</code></td>
+<td>List recording segments for a session</td>
+<td>JWT (proctor/admin)</td>
+</tr>
+</tbody>
+</table>
+<h3>6.7 Communication</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WS</td>
+<td><code>/ws/chat/{session_id}</code></td>
+<td>Proctor ↔ candidate chat channel</td>
+<td>JWT</td>
+</tr>
+</tbody>
+</table>
+<h3>6.8 Reporting</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/reports/{session_id}</code></td>
+<td>Get integrity report summary</td>
+<td>JWT (proctor/admin)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/reports/{session_id}/export</code></td>
+<td>Download PDF/CSV report</td>
+<td>JWT (proctor/admin)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/reports/{session_id}/evidence</code></td>
+<td>Download full evidence package</td>
+<td>JWT (admin)</td>
+</tr>
+</tbody>
+</table>
+<h3>6.9 Admin / User Management</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/candidates</code></td>
+<td>List all candidates</td>
+<td>JWT (admin)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/candidates/{id}</code></td>
+<td>Get a candidate's profile/history</td>
+<td>JWT (admin)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/users</code></td>
+<td>Create a proctor/admin account</td>
+<td>JWT (admin)</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/admin/users/{id}/role</code></td>
+<td>Change a user's role</td>
+<td>JWT (admin)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/audit-logs</code></td>
+<td>View system audit logs</td>
+<td>JWT (admin)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>7. Data Model</h2>
+<pre class="mermaid">erDiagram
+    USER ||--o{ SESSION : proctors
+    CANDIDATE ||--o{ SESSION : takes
+    EXAM ||--o{ SESSION : &#34;used in&#34;
+    EXAM ||--o{ QUESTION : contains
+    SESSION ||--o{ ANSWER : has
+    QUESTION ||--o{ ANSWER : &#34;answered by&#34;
+    SESSION ||--o{ FLAG : generates
+    SESSION ||--o{ RECORDING : produces
+    SESSION ||--o{ CHATMESSAGE : includes
+    SESSION ||--|| REPORT : &#34;summarized in&#34;
+
+    USER {
+        uuid id PK
+        string name
+        string email
+        string role
+    }
+    CANDIDATE {
+        uuid id PK
+        uuid user_id FK
+        string profile_photo_url
+        string device_fingerprint
+    }
+    EXAM {
+        uuid id PK
+        string title
+        int duration_minutes
+        uuid created_by FK
+    }
+    SESSION {
+        uuid id PK
+        uuid candidate_id FK
+        uuid exam_id FK
+        string status
+        datetime start_time
+        datetime end_time
+        float integrity_score
+    }
+    QUESTION {
+        uuid id PK
+        uuid exam_id FK
+        string text
+        string options
+        string correct_answer
+    }
+    ANSWER {
+        uuid id PK
+        uuid session_id FK
+        uuid question_id FK
+        string response
+        int time_taken_seconds
+    }
+    FLAG {
+        uuid id PK
+        uuid session_id FK
+        string type
+        string severity
+        datetime timestamp
+        string evidence_ref
+        string source
+    }
+    RECORDING {
+        uuid id PK
+        uuid session_id FK
+        string type
+        string storage_url
+        datetime start_time
+        datetime end_time
+    }
+    REPORT {
+        uuid id PK
+        uuid session_id FK
+        float integrity_score
+        string pdf_url
+        datetime generated_at
+    }
+    CHATMESSAGE {
+        uuid id PK
+        uuid session_id FK
+        string sender_role
+        string message
+        datetime timestamp
+    }
+</pre>
+<hr>
+<h2>8. External Interface Requirements</h2>
+<h3>8.1 User Interfaces</h3>
+<ul>
+<li>Candidate client: pre-exam wizard, exam screen, timer, submission screen.</li>
+<li>Admin dashboard: live grid, candidate focus view, alerts panel, reports, admin console.</li>
+</ul>
+<h3>8.2 Hardware Interfaces</h3>
+<ul>
+<li>Webcam (minimum 720p recommended), microphone, and a display, all on the candidate's machine.</li>
+</ul>
+<h3>8.3 Software Interfaces</h3>
+<ul>
+<li>WebRTC SFU (LiveKit / mediasoup / Agora) for live media relay.</li>
+<li>ONNX Runtime for local model inference.</li>
+<li>Object storage API (S3-compatible) for recordings and evidence.</li>
+</ul>
+<h3>8.4 Communication Interfaces</h3>
+<ul>
+<li>REST over HTTPS (TLS 1.3) for CRUD operations.</li>
+<li>WebSocket (WSS) for real-time flags and chat.</li>
+<li>WebRTC (SRTP) for live audio/video/screen streams.</li>
+</ul>
+<hr>
+<h2>9. Non-Functional Requirements</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Category</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NFR-1</td>
+<td>Performance</td>
+<td>Local AI detection (face/gaze/object) shall complete within ~300ms per sampled frame on typical candidate hardware.</td>
+</tr>
+<tr>
+<td>NFR-2</td>
+<td>Performance</td>
+<td>A real-time flag shall reach the admin dashboard within 2 seconds of detection.</td>
+</tr>
+<tr>
+<td>NFR-3</td>
+<td>Security</td>
+<td>All network communication shall use TLS 1.3.</td>
+</tr>
+<tr>
+<td>NFR-4</td>
+<td>Security</td>
+<td>Recordings and evidence shall be encrypted at rest (AES-256).</td>
+</tr>
+<tr>
+<td>NFR-5</td>
+<td>Security</td>
+<td>JWTs shall expire within a short configurable window with refresh-token rotation.</td>
+</tr>
+<tr>
+<td>NFR-6</td>
+<td>Reliability</td>
+<td>The client shall buffer locally through short network interruptions without data loss.</td>
+</tr>
+<tr>
+<td>NFR-7</td>
+<td>Availability</td>
+<td>Backend services shall target 99.5% uptime during scheduled exam windows.</td>
+</tr>
+<tr>
+<td>NFR-8</td>
+<td>Scalability</td>
+<td>The WebRTC SFU tier shall scale independently of the API tier.</td>
+</tr>
+<tr>
+<td>NFR-9</td>
+<td>Usability</td>
+<td>Pre-exam checks shall complete in under 5 minutes on a standard broadband connection.</td>
+</tr>
+<tr>
+<td>NFR-10</td>
+<td>Compliance</td>
+<td>Explicit recording consent shall be captured before capture begins, per India's DPDP Act (and GDPR where applicable).</td>
+</tr>
+<tr>
+<td>NFR-11</td>
+<td>Compliance</td>
+<td>Data retention periods shall be configurable per exam/organization.</td>
+</tr>
+<tr>
+<td>NFR-12</td>
+<td>Maintainability</td>
+<td>The client-backend API contract shall be versioned so either side can be updated independently.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>10. Appendix — Glossary</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Integrity Score</td>
+<td>A computed 0–100 style score reflecting how clean a session's flag history is</td>
+</tr>
+<tr>
+<td>Evidence Package</td>
+<td>The bundled recordings + logs exported for a disputed session</td>
+</tr>
+<tr>
+<td>Just-in-time delivery</td>
+<td>Sending exam content only at the moment it's needed, encrypted in transit</td>
+</tr>
+</tbody>
+</table>
+
+
+<!--claude-mermaid-runtime-begin:3477-->
+<style>.mermaid-diagram{margin-block:4px}.mermaid-diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}</style>
+<script src="/_runtime/mermaid-11.16.1.min.js"></script>
+<script>(function(){
+var CFG={"palettes":{"light":{"surface":"#f4efe4","text":"#42392e","line":"#8a7f6d","border":"#7a6c52","bg":"#fffdf8"},"dark":{"surface":"#262b34","text":"#f2f3f5","line":"#a8adb8","border":"#9aa4b8","bg":"#1f232b"}}};
+if(typeof mermaid==='undefined')return;
+var pres=Array.prototype.slice.call(document.querySelectorAll('pre.mermaid')).filter(function(p){if(p.hasAttribute('data-claude-mermaid-claimed'))return false;p.setAttribute('data-claude-mermaid-claimed','1');return true;});
+if(!pres.length)return;
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+var root=document.documentElement;
+var items=pres.map(function(pre){
+var mount=document.createElement('div');mount.className='mermaid-diagram';
+return {pre:pre,mount:mount,src:pre.textContent||''};
+});
+var seq=0;
+var renderGen=0;
+var lastKey='';
+function pageBg(fallback){
+var els=[document.body,document.documentElement];
+for(var i=0;i<els.length;i++){
+var c=els[i]&&getComputedStyle(els[i]).backgroundColor;
+if(c&&c!=='transparent'&&c!=='rgba(0, 0, 0, 0)')return c;
+}
+return fallback;
+}
+function render(){
+var theme=root.getAttribute('data-theme');
+var dark=theme==='dark'||(!!(mq&&mq.matches)&&theme!=='light');
+var pal=dark?CFG.palettes.dark:CFG.palettes.light;
+var bg=pageBg(pal.bg);
+var key=(dark?'d':'l')+'|'+bg;
+if(key===lastKey)return;
+lastKey=key;
+var gen=++renderGen;
+var font=getComputedStyle(document.body).fontFamily||'sans-serif';
+var nat={useMaxWidth:false};
+mermaid.initialize({
+startOnLoad:false,securityLevel:'strict',theme:'base',
+flowchart:nat,sequence:nat,er:nat,state:nat,class:nat,pie:nat,
+gantt:nat,journey:nat,timeline:nat,gitGraph:nat,mindmap:nat,xyChart:nat,
+quadrantChart:nat,sankey:nat,c4:nat,requirement:nat,block:nat,
+packet:nat,kanban:nat,architecture:nat,radar:nat,
+themeVariables:{background:bg,mainBkg:pal.surface,primaryColor:pal.surface,
+primaryTextColor:pal.text,lineColor:pal.line,primaryBorderColor:pal.border,
+nodeBorder:pal.border,clusterBorder:pal.border,edgeLabelBackground:bg,
+clusterBkg:'rgba(127,127,127,0.07)',titleColor:pal.text,
+darkMode:dark,rowOdd:bg,rowEven:'rgba(127,127,127,0.07)',
+attributeBackgroundColorOdd:bg,attributeBackgroundColorEven:'rgba(127,127,127,0.07)',
+fontSize:'16px',fontFamily:font},
+themeCSS:'.node rect, .node circle, .node polygon, .node path, .cluster rect { stroke-width: 2px; }'
+});
+items.forEach(function(it){
+var id='claude-mermaid-'+seq++;
+mermaid.render(id,it.src).then(function(r){
+if(gen!==renderGen)return;
+var prev=it.pre.previousElementSibling;
+if(prev&&prev.className==='mermaid-diagram'&&prev!==it.mount)return;
+it.mount.innerHTML=r.svg;
+if(!it.mount.parentNode)it.pre.parentNode.insertBefore(it.mount,it.pre);
+it.pre.style.display='none';
+},function(){
+var scratch=document.getElementById(id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+scratch=document.getElementById('d'+id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+if(gen!==renderGen)return;
+if(it.mount.parentNode)it.mount.parentNode.removeChild(it.mount);
+it.pre.style.display='';
+});
+});
+}
+render();
+if(mq&&mq.addEventListener)mq.addEventListener('change',render);
+if(typeof MutationObserver!=='undefined')new MutationObserver(render).observe(root,{attributes:true,attributeFilter:['data-theme']});
+})();</script>
+<!--claude-mermaid-runtime-end-->
+</body></html>
