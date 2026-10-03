@@ -8,6 +8,28 @@ from app.api import auth, sessions, flags, admin, reports, execute
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    try:
+        from app.models.user import User
+        from app.core.security import hash_password
+        from app.core.database import AsyncSessionLocal
+        from sqlalchemy import select
+        import uuid
+
+        async with AsyncSessionLocal() as db:
+            if settings.DEFAULT_RECRUITER_EMAIL:
+                r_res = await db.execute(select(User).where(User.email == settings.DEFAULT_RECRUITER_EMAIL))
+                if not r_res.scalar_one_or_none():
+                    rec = User(
+                        id=uuid.uuid4(),
+                        email=settings.DEFAULT_RECRUITER_EMAIL,
+                        name=settings.DEFAULT_RECRUITER_NAME,
+                        password_hash=hash_password(settings.DEFAULT_RECRUITER_PASSWORD),
+                        role="recruiter"
+                    )
+                    db.add(rec)
+                    await db.commit()
+    except Exception as e:
+        print("[STARTUP NOTICE]", e)
     yield
 
 app = FastAPI(

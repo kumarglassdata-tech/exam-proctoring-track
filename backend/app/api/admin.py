@@ -203,8 +203,19 @@ async def send_invites(id: uuid.UUID, req: InviteCreate, db: AsyncSession = Depe
     if not exam:
         raise HTTPException(404, detail="Exam not found")
 
-    window_start_str = exam.window_start.strftime("%d %b %Y, %I:%M %p") if exam.window_start else "Open"
-    window_end_str   = exam.window_end.strftime("%d %b %Y, %I:%M %p")   if exam.window_end   else "No expiry"
+    # Update exam schedule / timing if recruiter specified it in invite dialog
+    if req.window_start:
+        exam.window_start = req.window_start
+    if req.window_end:
+        exam.window_end = req.window_end
+    if req.duration_minutes:
+        exam.duration_minutes = req.duration_minutes
+
+    window_start_str = req.window_start_display or (exam.window_start.strftime("%d %b %Y, %I:%M %p") if exam.window_start else "Open immediately")
+    window_end_str   = req.window_end_display or (exam.window_end.strftime("%d %b %Y, %I:%M %p") if exam.window_end else "No expiry")
+
+    # Base web URL for candidate portal (runs on Next.js frontend)
+    base_url = (req.frontend_url or settings.FRONTEND_URL or "http://localhost:3000").rstrip("/")
 
     created_invites = []
     emails_sent = 0
@@ -248,14 +259,15 @@ async def send_invites(id: uuid.UUID, req: InviteCreate, db: AsyncSession = Depe
             token=invite_token,
             temp_password_hash=hash_password(temp_password),
             email_sent_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(days=7),
+            expires_at=exam.window_end or (datetime.utcnow() + timedelta(days=7)),
             status="pending",
         )
         db.add(invite)
 
+        web_link = f"{base_url}/invite/{invite_token}"
         deep_link = f"examguard://login?token={invite_token}"
 
-        # Attempt real email
+        # Attempt real email with HTTP web portal link (Gmail approved) & deep link
         email_sent = send_invite_email(
             to_email=email_addr,
             candidate_name=user.name,
@@ -263,9 +275,11 @@ async def send_invites(id: uuid.UUID, req: InviteCreate, db: AsyncSession = Depe
             exam_window_start=window_start_str,
             exam_window_end=window_end_str,
             duration_minutes=exam.duration_minutes,
-            invite_link=deep_link,
+            invite_link=web_link,
             username=user.email,
             temp_password=temp_password,
+            token=invite_token,
+            deep_link=deep_link,
         )
         if email_sent:
             emails_sent += 1
@@ -274,8 +288,9 @@ async def send_invites(id: uuid.UUID, req: InviteCreate, db: AsyncSession = Depe
             "email": email_addr,
             "candidate_name": user.name,
             "username": user.email,
-            "temp_password": temp_password,   # always returned so recruiter can share manually
+            "temp_password": temp_password,
             "token": invite_token,
+            "web_link": web_link,
             "deep_link": deep_link,
             "email_sent": email_sent,
         })

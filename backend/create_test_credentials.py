@@ -15,7 +15,23 @@ async def create_test_suite():
     await init_db()
     
     async with AsyncSessionLocal() as db:
-        # 1. Get or create recruiter
+        # 1. Get or create recruiters
+        from app.core.config import settings
+
+        # Seed recruiter from .env (e.g. careers@glassdata.ai)
+        if settings.DEFAULT_RECRUITER_EMAIL:
+            env_rec_res = await db.execute(select(User).where(User.email == settings.DEFAULT_RECRUITER_EMAIL))
+            if not env_rec_res.scalar_one_or_none():
+                env_recruiter = User(
+                    id=uuid.uuid4(),
+                    email=settings.DEFAULT_RECRUITER_EMAIL,
+                    name=settings.DEFAULT_RECRUITER_NAME,
+                    password_hash=hash_password(settings.DEFAULT_RECRUITER_PASSWORD),
+                    role="recruiter"
+                )
+                db.add(env_recruiter)
+                await db.flush()
+
         rec_res = await db.execute(select(User).where(User.email == "recruiter@examguard.com"))
         recruiter = rec_res.scalar_one_or_none()
         if not recruiter:

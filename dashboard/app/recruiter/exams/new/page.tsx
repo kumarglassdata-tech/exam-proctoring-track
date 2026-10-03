@@ -76,6 +76,17 @@ export default function NewExamPage() {
   const [companyLogo, setCompanyLogo] = useState("https://cdn-icons-png.flaticon.com/512/3135/3135715.png");
   const [negativeMarking, setNegativeMarking] = useState(true);
   const [randomize, setRandomize] = useState(true);
+  const toLocalISO = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const [windowStart, setWindowStart] = useState(() => toLocalISO(new Date()));
+  const [windowEnd, setWindowEnd] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return toLocalISO(d);
+  });
   const [forbiddenApps, setForbiddenApps] = useState("Discord, AnyDesk, OBS, WhatsApp, Zoom");
 
   // Questions
@@ -125,6 +136,8 @@ export default function NewExamPage() {
           title,
           description,
           duration_minutes: parseInt(duration) || 60,
+          window_start: windowStart ? new Date(windowStart).toISOString() : undefined,
+          window_end: windowEnd ? new Date(windowEnd).toISOString() : undefined,
           sections: [],
           settings: {
             company_name: companyName,
@@ -219,6 +232,27 @@ export default function NewExamPage() {
             placeholder="Brief description of the exam scope..."
             className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-indigo-500 resize-none"
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-semibold text-white/60 mb-1.5 block">Exam Starts At *</label>
+            <input
+              type="datetime-local"
+              value={windowStart}
+              onChange={(e) => setWindowStart(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-indigo-500 transition-colors font-mono"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-white/60 mb-1.5 block">Valid Until / Deadline *</label>
+            <input
+              type="datetime-local"
+              value={windowEnd}
+              onChange={(e) => setWindowEnd(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-indigo-500 transition-colors font-mono"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
