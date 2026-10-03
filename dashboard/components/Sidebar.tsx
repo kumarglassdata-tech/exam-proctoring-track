@@ -20,6 +20,7 @@ const NAV = [
   { label: "Live Monitoring", href: "/proctor/live", icon: Video },
   { label: "Candidate Results", href: "/recruiter/results", icon: BarChart3 },
   { label: "Integrity Reports", href: "/proctor/reports", icon: FileText },
+  { label: "Admins & Recruiters", href: "/recruiter/users", icon: Users },
 ];
 
 export default function Sidebar() {

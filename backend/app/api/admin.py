@@ -3,6 +3,7 @@ import secrets
 from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.core.database import get_db
@@ -348,8 +349,190 @@ async def get_exam_results(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     sessions = res.scalars().all()
     return [await _build_result_row(s, db) for s in sessions]
 
+from fastapi.responses import JSONResponse
+from app.models.answer import Answer
+from app.models.user import RoleEnum
+
 @router.get("/admin/results/all")
 async def get_all_results(db: AsyncSession = Depends(get_db)):
     res = await db.execute(select(Session).order_by(Session.created_at.desc()))
     sessions = res.scalars().all()
     return [await _build_result_row(s, db) for s in sessions]
+
+# ─────────────────────────── ANSWER SHEET EXPORTS (AI SCORING READY) ───────────────────────────
+
+async def _generate_candidate_answer_sheet(session_id: uuid.UUID, db: AsyncSession) -> dict:
+    s_res = await db.execute(select(Session).where(Session.id == session_id))
+    sess = s_res.scalar_one_or_none()
+    if not sess:
+        raise HTTPException(404, detail="Session not found")
+
+    # Candidate profile
+    candidate_name, candidate_email = "Candidate", "candidate@example.com"
+    c_res = await db.execute(select(Candidate).where(Candidate.id == sess.candidate_id))
+    cand = c_res.scalar_one_or_none()
+    if cand:
+        u_res = await db.execute(select(User).where(User.id == cand.user_id))
+        u = u_res.scalar_one_or_none()
+        if u:
+            candidate_name, candidate_email = u.name, u.email
+
+    # Exam details
+    e_res = await db.execute(select(Exam).where(Exam.id == sess.exam_id))
+    exam = e_res.scalar_one_or_none()
+    exam_title = exam.title if exam else "Assessment"
+
+    # Questions & Answers
+    q_res = await db.execute(select(Question).where(Question.exam_id == sess.exam_id))
+    questions = q_res.scalars().all()
+
+    ans_res = await db.execute(select(Answer).where(Answer.session_id == session_id))
+    answers = {str(a.question_id): a for a in ans_res.scalars().all()}
+
+    # Flags / Violation record
+    f_res = await db.execute(select(Flag).where(Flag.session_id == session_id).order_by(Flag.flagged_at.asc()))
+    flags = f_res.scalars().all()
+
+    qa_records = []
+    for q in questions:
+        ans = answers.get(str(q.id))
+        candidate_response = ans.response if ans else None
+        qa_records.append({
+            "question_id": str(q.id),
+            "section": q.section,
+            "type": q.type,
+            "question_text": q.text,
+            "max_marks": q.marks,
+            "correct_answer_ref": q.correct_answer or q.model_answer or q.test_cases,
+            "candidate_response": candidate_response,
+            "score_awarded": ans.score if ans else 0.0,
+            "is_correct": ans.is_correct if ans else False,
+            "execution_details": ans.judge0_result if ans else None,
+        })
+
+    return {
+        "export_timestamp": datetime.utcnow().isoformat(),
+        "ai_scoring_format": "v1.0",
+        "session_id": str(sess.id),
+        "candidate": {
+            "name": candidate_name,
+            "email": candidate_email,
+            "candidate_id": str(sess.candidate_id),
+        },
+        "exam": {
+            "exam_id": str(sess.exam_id),
+            "title": exam_title,
+        },
+        "performance": {
+            "status": str(sess.status),
+            "integrity_score": sess.integrity_score if sess.integrity_score is not None else 100.0,
+            "total_score": sess.total_score if sess.total_score is not None else 0.0,
+            "start_time": sess.start_time.isoformat() if sess.start_time else None,
+            "end_time": sess.end_time.isoformat() if sess.end_time else None,
+        },
+        "proctoring_flags": [
+            {
+                "type": fl.type,
+                "severity": fl.severity,
+                "message": fl.message,
+                "flagged_at": fl.flagged_at.isoformat() if fl.flagged_at else None,
+            }
+            for fl in flags
+        ],
+        "question_answers": qa_records,
+    }
+
+@router.get("/admin/answers/download/{session_id}")
+async def download_answer_sheet(session_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    data = await _generate_candidate_answer_sheet(session_id, db)
+    filename = f"answersheet_{data['candidate']['name'].replace(' ', '_')}_{session_id}.json"
+    return JSONResponse(
+        content=data,
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+@router.get("/admin/answers/download_all/{exam_id}")
+async def download_all_answer_sheets(exam_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    s_res = await db.execute(select(Session).where(Session.exam_id == exam_id))
+    sessions = s_res.scalars().all()
+    sheets = []
+    for s in sessions:
+        try:
+            sheet = await _generate_candidate_answer_sheet(s.id, db)
+            sheets.append(sheet)
+        except Exception:
+            pass
+
+    filename = f"bulk_answer_sheets_exam_{exam_id}.json"
+    return JSONResponse(
+        content={"exam_id": str(exam_id), "total_submissions": len(sheets), "candidate_answer_sheets": sheets},
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+# ─────────────────────────── SUPER ADMIN USER MANAGEMENT ───────────────────────────
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: str = "recruiter"
+
+@router.get("/admin/users")
+async def list_admin_users(db: AsyncSession = Depends(get_db)):
+    res = await db.execute(
+        select(User).where(User.role.in_([RoleEnum.admin, RoleEnum.recruiter, RoleEnum.superadmin])).order_by(User.created_at.desc())
+    )
+    users = res.scalars().all()
+    return [
+        {
+            "id": str(u.id),
+            "name": u.name,
+            "email": u.email,
+            "role": u.role.value if hasattr(u.role, "value") else str(u.role),
+            "is_active": u.is_active,
+            "created_at": u.created_at.isoformat() if u.created_at else None,
+        }
+        for u in users
+    ]
+
+@router.post("/admin/users")
+async def create_admin_user(req: UserCreate, db: AsyncSession = Depends(get_db)):
+    # Check if email exists
+    existing = await db.execute(select(User).where(User.email == req.email.strip().lower()))
+    if existing.scalar_one_or_none():
+        raise HTTPException(400, detail="User with this email already exists")
+
+    role_val = req.role.lower()
+    if role_val not in ["admin", "recruiter", "superadmin"]:
+        role_val = "recruiter"
+
+    u = User(
+        id=uuid.uuid4(),
+        name=req.name.strip(),
+        email=req.email.strip().lower(),
+        password_hash=hash_password(req.password),
+        role=role_val,
+        is_active=True,
+    )
+    db.add(u)
+    await db.commit()
+    await db.refresh(u)
+    return {
+        "id": str(u.id),
+        "name": u.name,
+        "email": u.email,
+        "role": u.role.value if hasattr(u.role, "value") else str(u.role),
+        "created_at": u.created_at.isoformat() if u.created_at else None,
+    }
+
+@router.delete("/admin/users/{user_id}")
+async def delete_admin_user(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(User).where(User.id == user_id))
+    user = res.scalar_one_or_none()
+    if not user:
+        raise HTTPException(404, detail="User not found")
+
+    await db.delete(user)
+    await db.commit()
+    return {"message": f"User {user.email} deleted successfully", "id": str(user_id)}
+

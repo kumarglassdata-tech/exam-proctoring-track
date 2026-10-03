@@ -88,14 +88,25 @@ function ResultsContent() {
     a.download = `results-${examId ?? "all"}.csv`; a.click();
   }
 
+  function downloadAnswerSheet(sessionId: string) {
+    const token = localStorage.getItem("access_token");
+    window.open(`${API_URL}/admin/answers/download/${sessionId}?token=${token}`, "_blank");
+  }
+
+  function downloadBulkAnswerSheets() {
+    if (!examId) return;
+    const token = localStorage.getItem("access_token");
+    window.open(`${API_URL}/admin/answers/download_all/${examId}?token=${token}`, "_blank");
+  }
+
   return (
     <div className="p-8 max-w-7xl mx-auto w-full space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Candidate Results</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Candidate Results & Answer Sheets</h1>
           <p className="text-sm text-white/50 mt-1">
-            {examId ? `Showing results for exam ${examId}` : "All exam results"}
+            {examId ? `Showing results for exam ${examId}` : "All exam results & AI-evaluable answer sheets"}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -106,6 +117,17 @@ function ResultsContent() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
+
+          {examId && (
+            <button
+              onClick={downloadBulkAnswerSheets}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-600/30"
+            >
+              <FileText className="w-4 h-4" />
+              Download All Answer Sheets (for AI Scoring)
+            </button>
+          )}
+
           <button
             onClick={exportCSV}
             disabled={filtered.length === 0}
@@ -225,13 +247,23 @@ function ResultsContent() {
                       )}
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <a
-                        href={`/proctor/reports/${r.session_id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10 transition-all"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        View
-                      </a>
+                      <div className="flex items-center justify-center gap-2">
+                        <a
+                          href={`/proctor/reports/${r.session_id}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10 transition-all"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          View
+                        </a>
+                        <button
+                          onClick={() => downloadAnswerSheet(r.session_id)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 transition-all"
+                          title="Download Candidate Answer Sheet JSON for AI Evaluation"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Answer Sheet
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

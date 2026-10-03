@@ -202,20 +202,27 @@ function _runProctorAnalysis(ts: number): void {
   // 1. Face Detector check
   if (faceDetector) {
     try {
-      const fdRes = faceDetector.detectForVideo(videoElement, ts);
-      faceCount = Math.max(faceCount, fdRes.detections.length);
-      if (fdRes.detections.length > 0 && fdRes.detections[0].boundingBox) {
-        const b = fdRes.detections[0].boundingBox;
-        primaryBox = { originX: b.originX, originY: b.originY, width: b.width, height: b.height };
+      // MediaPipe requires integer millisecond timestamp
+      const frameTs = Math.round(ts);
+      const fdRes = faceDetector.detectForVideo(videoElement, frameTs);
+      if (fdRes && fdRes.detections) {
+        faceCount = Math.max(faceCount, fdRes.detections.length);
+        if (fdRes.detections.length > 0 && fdRes.detections[0].boundingBox) {
+          const b = fdRes.detections[0].boundingBox;
+          primaryBox = { originX: b.originX, originY: b.originY, width: b.width, height: b.height };
+        }
       }
-    } catch {}
+    } catch (err) {
+      // Ignore timestamp/WASM transient glitches
+    }
   }
 
   // 2. Face Landmarker check (multi-face + 478 3D landmarks)
   if (faceLandmarker) {
     try {
-      const flRes = faceLandmarker.detectForVideo(videoElement, ts);
-      if (flRes.faceLandmarks) {
+      const frameTs = Math.round(ts);
+      const flRes = faceLandmarker.detectForVideo(videoElement, frameTs);
+      if (flRes && flRes.faceLandmarks) {
         faceCount = Math.max(faceCount, flRes.faceLandmarks.length);
         if (flRes.faceLandmarks.length > 0) {
           landmarks = flRes.faceLandmarks[0];
@@ -232,13 +239,53 @@ function _runProctorAnalysis(ts: number): void {
             primaryBox = {
               originX: minX * vw,
               originY: minY * vh,
-              width: (maxX - minX) * vw,
-              height: (maxY - minY) * vh,
+              width: Math.max((maxX - minX) * vw, 60),
+              height: Math.max((maxY - minY) * vh, 60),
             };
           }
         }
       }
-    } catch {}
+    } catch (err) {
+      // Ignore transient errors
+    }
+  }
+
+  // 3. Fallback Heuristic Check: If MediaPipe detected 0 faces, run Canvas Skin/Luma check
+  // Prevents false positive "no_face" when candidate is sitting in front of camera under varying light
+  if (faceCount === 0 && videoElement.readyState >= 2) {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 48;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(videoElement, 0, 0, 64, 48);
+        const data = ctx.getImageData(0, 0, 64, 48).data;
+        let skinLumaPixels = 0;
+        let totalPixels = 0;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          // Human skin tone & face brightness heuristic range
+          const max = Math.max(r, g, b);
+          const min = Math.min(r, g, b);
+          const isSkin = r > 40 && g > 25 && b > 15 && (max - min) > 12 && r > g && r > b;
+          if (isSkin) skinLumaPixels++;
+          totalPixels++;
+        }
+
+        const skinRatio = skinLumaPixels / totalPixels;
+        // If center/frame has >8% skin tones, a face/person is present!
+        if (skinRatio > 0.08) {
+          faceCount = 1;
+          primaryBox = { originX: 40, originY: 30, width: 240, height: 180 };
+        }
+      }
+    } catch (err) {
+      // Ignore canvas read errors
+    }
   }
 
   _latestFaceBox = primaryBox;

@@ -72,6 +72,8 @@ export default function NewExamPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("60");
+  const [companyName, setCompanyName] = useState("Acme Global Tech");
+  const [companyLogo, setCompanyLogo] = useState("https://cdn-icons-png.flaticon.com/512/3135/3135715.png");
   const [negativeMarking, setNegativeMarking] = useState(true);
   const [randomize, setRandomize] = useState(true);
   const [forbiddenApps, setForbiddenApps] = useState("Discord, AnyDesk, OBS, WhatsApp, Zoom");
@@ -125,6 +127,8 @@ export default function NewExamPage() {
           duration_minutes: parseInt(duration) || 60,
           sections: [],
           settings: {
+            company_name: companyName,
+            company_logo: companyLogo,
             negative_marking: negativeMarking,
             randomize_order: randomize,
             forbidden_apps: forbiddenApps.split(",").map((s) => s.trim()).filter(Boolean),
@@ -215,6 +219,27 @@ export default function NewExamPage() {
             placeholder="Brief description of the exam scope..."
             className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-indigo-500 resize-none"
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-semibold text-white/60 mb-1.5 block">Company / Institution Name</label>
+            <input
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="e.g. Acme Corporation"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-white/60 mb-1.5 block">Company Logo URL / Asset</label>
+            <input
+              value={companyLogo}
+              onChange={(e) => setCompanyLogo(e.target.value)}
+              placeholder="https://example.com/logo.png"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
