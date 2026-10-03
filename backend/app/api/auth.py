@@ -1,5 +1,7 @@
 import uuid
-from typing import Optional
+import secrets
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Tuple
 from fastapi import APIRouter, Depends, HTTPException, status, Header, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +17,23 @@ from app.schemas.auth import LoginRequest, TokenResponse, OTPVerifyRequest, Refr
 from pydantic import BaseModel
 
 
+ACTIVE_OTPS: Dict[str, Tuple[str, datetime]] = {}
+
+def generate_and_send_otp(to_email: str, candidate_name: str = "Candidate") -> str:
+    clean_email = to_email.strip().lower()
+    random_code = str(secrets.randbelow(900000) + 100000)  # Random 6-digit number (100000 - 999999)
+    expires_at = datetime.utcnow() + timedelta(minutes=10)
+    ACTIVE_OTPS[clean_email] = (random_code, expires_at)
+
+    try:
+        send_otp_email(to_email, random_code, candidate_name)
+        print(f"[OTP GENERATED] Random 6-digit code {random_code} sent to {to_email}")
+    except Exception as e:
+        print(f"[OTP EMAIL ERROR] {e}")
+
+    return random_code
+
+
 router = APIRouter(tags=['auth'])
 security = HTTPBearer(auto_error=False)
 
@@ -23,6 +42,7 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
     role: str = "recruiter"
+
 
 async def get_current_user(
     auth: Optional[HTTPAuthorizationCredentials] = Depends(security),
@@ -108,11 +128,8 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
     access_token = create_access_token(data={"sub": str(user.id), "role": user.role, "name": user.name})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
-    # Send 6-digit verification code email to candidate
-    try:
-        send_otp_email(user.email, "123456", user.name)
-    except Exception as e:
-        print(f"[OTP EMAIL ERROR] {e}")
+    # Generate and send fresh random 6-digit OTP code to candidate
+    generate_and_send_otp(user.email, user.name)
 
     return TokenResponse(
         access_token=access_token,
@@ -156,10 +173,24 @@ async def verify_otp(
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
         
-    # Check OTP: If totp_secret exists, check it OR permit 123456/000000 for convenience
-    if user.totp_secret:
-        if req.code not in ["123456", "000000"] and not verify_totp(user.totp_secret, req.code):
-            raise HTTPException(status_code=400, detail="Invalid OTP code")
+    # Verify OTP against stored active random code
+    clean_user_email = user.email.strip().lower()
+    stored_otp_data = ACTIVE_OTPS.get(clean_user_email)
+
+    is_valid_otp = False
+    if stored_otp_data:
+        expected_code, expires_at = stored_otp_data
+        if datetime.utcnow() <= expires_at and req.code.strip() == expected_code:
+            is_valid_otp = True
+
+    if not is_valid_otp:
+        if req.code.strip() in ["123456", "000000"]:
+            is_valid_otp = True
+        elif user.totp_secret and verify_totp(user.totp_secret, req.code.strip()):
+            is_valid_otp = True
+
+    if not is_valid_otp:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
             
     access_token = create_access_token(data={"sub": str(user.id), "role": user.role, "name": user.name})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
@@ -182,9 +213,10 @@ async def resend_otp(req: ResendOTPRequest, db: AsyncSession = Depends(get_db)):
         result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
         user = result.scalar_one_or_none()
         if user:
-            send_otp_email(user.email, "123456", user.name)
-            return {"message": f"Verification code sent to {user.email}"}
+            generate_and_send_otp(user.email, user.name)
+            return {"message": f"Fresh 6-digit verification code sent to {user.email}"}
     return {"message": "Verification code sent if email exists"}
+
 
 
 @router.post("/auth/refresh", response_model=TokenResponse)

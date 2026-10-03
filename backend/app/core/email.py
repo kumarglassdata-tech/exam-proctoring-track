@@ -59,7 +59,9 @@ def send_invite_email(
     .creds-row:last-child {{ border-bottom:none; }}
     .creds-label {{ font-size:12px; color:#94a3b8; font-weight:600; }}
     .creds-value {{ font-size:14px; color:#38bdf8; font-family:monospace; font-weight:700; }}
-    .btn {{ display:block; width:fit-content; margin:24px auto 16px; padding:14px 32px; background:linear-gradient(135deg,#6d28d9,#4f46e5); color:#ffffff !important; text-decoration:none; border-radius:10px; font-weight:700; font-size:15px; text-align:center; box-shadow:0 4px 14px rgba(99,102,241,0.4); }}
+    .btn-group {{ display:flex; flex-direction:column; gap:12px; align-items:center; margin:24px 0; }}
+    .btn {{ display:block; width:80%; padding:14px 24px; background:linear-gradient(135deg,#6d28d9,#4f46e5); color:#ffffff !important; text-decoration:none; border-radius:10px; font-weight:700; font-size:15px; text-align:center; box-shadow:0 4px 14px rgba(99,102,241,0.4); }}
+    .btn-secondary {{ display:block; width:80%; padding:12px 24px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:#38bdf8 !important; text-decoration:none; border-radius:10px; font-weight:600; font-size:14px; text-align:center; }}
     .instructions {{ background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:16px; margin:20px 0; font-size:12px; color:#94a3b8; line-height:1.6; }}
     .instructions strong {{ color:#e2e8f0; }}
     .footer {{ padding:20px 32px; border-top:1px solid rgba(255,255,255,0.06); text-align:center; }}
@@ -108,15 +110,19 @@ def send_invite_email(
         {f'<div class="creds-row"><span class="creds-label">Access Token:</span><span class="creds-value">{token}</span></div>' if token else ''}
       </div>
 
-      <a href="{invite_link}" class="btn" target="_blank">Open Candidate Portal & Launch Exam →</a>
+      <div class="btn-group">
+        <a href="{invite_link}" class="btn" target="_blank">🚀 Active Candidate Portal Access & Launch →</a>
+        <a href="{invite_link}?download=true" class="btn-secondary" target="_blank">💻 Download ExamGuard Desktop App (.exe)</a>
+      </div>
 
       <div class="instructions">
         <strong>How to take your exam:</strong><br>
-        1. <strong>Click the button above</strong> to open your personal Candidate Portal. From there, you can launch the ExamGuard desktop application with 1 click.<br>
-        2. <strong>Or open ExamGuard directly</strong> on your PC and enter your Candidate Email and Temporary Password.<br>
-        3. <em>Desktop App Protocol:</em> <a href="{app_deep_link}" style="color:#818cf8; word-break:break-all;">{app_deep_link}</a>
+        1. <strong>Click the active launch button above</strong> to open your personal Candidate Portal and launch your exam.<br>
+        2. <strong>Download Desktop App:</strong> If required, click the download link above to get the Windows candidate app.<br>
+        3. <strong>1-Click Desktop Protocol:</strong> <a href="{app_deep_link}" style="color:#818cf8; word-break:break-all;">{app_deep_link}</a>
       </div>
     </div>
+
     <div class="footer">
       <p>This invite is strictly for {username}. Do not share your credentials with anyone.</p>
       <p style="margin-top:6px">ExamGuard — Secure AI-Proctored Examination Platform</p>
