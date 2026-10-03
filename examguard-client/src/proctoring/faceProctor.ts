@@ -25,17 +25,18 @@ let sessionId: string | null = null;
 let noFaceFrames = 0;
 let gazeAwayFrames = 0;
 let multiFaceFrames = 0;
-const NO_FACE_THRESHOLD = 15;   // ~1.5s
-const GAZE_AWAY_THRESHOLD = 12; // ~1.2s
-const MULTI_FACE_THRESHOLD = 5; // ~0.5s
+const NO_FACE_THRESHOLD = 8;   // ~0.8s
+const GAZE_AWAY_THRESHOLD = 6; // ~0.6s
+const MULTI_FACE_THRESHOLD = 3; // ~0.3s
 
 // Per-type cooldown — prevents flag spam
 const lastFlagTime: Record<string, number> = {};
 const FLAG_COOLDOWN_MS: Record<string, number> = {
-  no_face:     6000,  // once per 6s
-  multi_face:  4000,  // once per 4s
-  gaze_away:   6000,  // once per 6s
+  no_face:     3000,  // once per 3s
+  multi_face:  2500,  // once per 2.5s
+  gaze_away:   3000,  // once per 3s
 };
+
 
 export type FaceStatus = 'loading' | 'ok' | 'no_face' | 'multi_face' | 'gaze_away';
 let _faceStatus: FaceStatus = 'loading';

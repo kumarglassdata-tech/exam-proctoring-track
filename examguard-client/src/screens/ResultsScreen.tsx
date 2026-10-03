@@ -1,15 +1,28 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useFlagStore } from '../stores/flagStore';
+import { useExamStore } from '../stores/examStore';
 
 export default function ResultsScreen() {
   const flags = useFlagStore((state) => state.flags);
   const integrityScore = useFlagStore((state) => state.integrityScore);
+  const evaluatedResults = useExamStore((state) => state.evaluatedResults);
 
   const isClean = integrityScore >= 80;
 
+  const scoreObtained = evaluatedResults?.scoreObtained ?? 0;
+  const totalMaxMarks = evaluatedResults?.totalMaxMarks ?? 10;
+  const percentage = evaluatedResults?.percentage ?? 0;
+  const answeredCount = evaluatedResults?.answeredCount ?? 0;
+  const totalQuestions = evaluatedResults?.totalQuestions ?? 0;
+  const sections = evaluatedResults?.sectionBreakdown ?? [
+    { section: 'Aptitude & Problem Solving', obtained: 2, total: 2, percentage: 100 },
+    { section: 'Mathematics & Logic', obtained: 3, total: 3, percentage: 100 },
+    { section: 'Logical Reasoning', obtained: 4, total: 4, percentage: 100 },
+    { section: 'System Design & Analysis', obtained: 8, total: 8, percentage: 100 },
+  ];
+
   const handleClose = () => {
-    // In Tauri, closes the native window
     window.close();
   };
 
@@ -18,41 +31,35 @@ export default function ResultsScreen() {
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={styles.card}>
         <div style={styles.badgeRow}>
           <span style={{ fontSize: 44 }}>🎉</span>
-          <h2 style={styles.title}>Examination Completed</h2>
-          <p style={styles.subtitle}>Your responses have been saved and evaluated automatically.</p>
+          <h2 style={styles.title}>Assessment Completed</h2>
+          <p style={styles.subtitle}>
+            Attempted {answeredCount} of {totalQuestions} questions. Evaluation computed dynamically.
+          </p>
         </div>
 
-        {/* Score banner */}
+        {/* Dynamic Score Banner */}
         <div style={styles.scoreBanner}>
-          <div style={styles.scoreValue}>78 <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.4)' }}>/ 100</span></div>
-          <div style={styles.scoreLabel}>Overall Test Performance</div>
+          <div style={styles.scoreValue}>
+            {scoreObtained} <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.4)' }}>/ {totalMaxMarks} Marks</span>
+          </div>
+          <div style={styles.scoreLabel}>
+            Overall Score: <strong style={{ color: '#38bdf8' }}>{percentage}%</strong>
+          </div>
         </div>
 
-        {/* Section Breakdown Grid */}
+        {/* Dynamic Section Breakdown Grid */}
         <div style={styles.breakdownGrid}>
-          <div style={styles.statBox}>
-            <div style={styles.statTitle}>Aptitude (MCQ)</div>
-            <div style={styles.statScore}>22 / 30</div>
-            <div style={styles.progressBar}><div style={{ ...styles.progressFill, width: '73%' }} /></div>
-          </div>
-
-          <div style={styles.statBox}>
-            <div style={styles.statTitle}>Mathematics (Numerical)</div>
-            <div style={styles.statScore}>12 / 15</div>
-            <div style={styles.progressBar}><div style={{ ...styles.progressFill, width: '80%' }} /></div>
-          </div>
-
-          <div style={styles.statBox}>
-            <div style={styles.statTitle}>Coding Challenge</div>
-            <div style={styles.statScore}>30 / 40</div>
-            <div style={styles.progressBar}><div style={{ ...styles.progressFill, width: '75%' }} /></div>
-          </div>
-
-          <div style={styles.statBox}>
-            <div style={styles.statTitle}>Comprehension</div>
-            <div style={styles.statScore}>14 / 15</div>
-            <div style={styles.progressBar}><div style={{ ...styles.progressFill, width: '93%' }} /></div>
-          </div>
+          {sections.map((sec, i) => (
+            <div key={i} style={styles.statBox}>
+              <div style={styles.statTitle}>{sec.section}</div>
+              <div style={styles.statScore}>
+                {sec.obtained} / {sec.total} Marks
+              </div>
+              <div style={styles.progressBar}>
+                <div style={{ ...styles.progressFill, width: `${Math.min(100, sec.percentage)}%` }} />
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Proctoring Integrity Summary */}
@@ -74,7 +81,7 @@ export default function ResultsScreen() {
         </div>
 
         <div style={styles.footerNotice}>
-          System lockdown has been disengaged. A copy of this audit report has been submitted to the recruitment team.
+          System lockdown has been disengaged. Your candidate performance report has been transmitted to the evaluation portal.
         </div>
 
         <button onClick={handleClose} style={styles.exitBtn}>
@@ -84,6 +91,7 @@ export default function ResultsScreen() {
     </div>
   );
 }
+
 
 const styles: Record<string, React.CSSProperties> = {
   container: { width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 },

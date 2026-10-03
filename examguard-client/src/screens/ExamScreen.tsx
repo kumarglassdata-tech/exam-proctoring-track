@@ -11,7 +11,6 @@ import AlertToast from '../components/AlertToast';
 import IntegrityBadge from '../components/IntegrityBadge';
 import MCQQuestion from '../question-types/MCQQuestion';
 import NumericalQuestion from '../question-types/NumericalQuestion';
-import CodingQuestion from '../question-types/CodingQuestion';
 import DescriptiveQuestion from '../question-types/DescriptiveQuestion';
 
 interface ExamScreenProps {
@@ -34,7 +33,7 @@ const SAMPLE_QUESTIONS: Question[] = [
   {
     id: 'q2',
     exam_id: 'e1',
-    section: 'Mathematics & Algorithms',
+    section: 'Mathematics & Logic',
     type: 'numerical',
     text: 'Evaluate the limit as x approaches 0: \\lim_{x \\to 0} \\frac{\\sin(3x)}{x}',
     correct_answer: '3',
@@ -46,19 +45,16 @@ const SAMPLE_QUESTIONS: Question[] = [
   {
     id: 'q3',
     exam_id: 'e1',
-    section: 'Coding & Data Structures',
-    type: 'coding',
-    text: 'Write a Python function `solution(nums, target)` that returns the indices of the two numbers such that they add up to target.',
-    test_cases: [
-      { input: '[2, 7, 11, 15], 9', expected_output: '[0, 1]' },
-      { input: '[3, 2, 4], 6', expected_output: '[1, 2]' },
-      { input: '[3, 3], 6', expected_output: '[0, 1]' },
-    ],
-    time_limit_ms: 1000,
-    marks: 10,
-    negative_marks: 0,
+    section: 'Logical Reasoning',
+    type: 'mcq',
+    text: 'Which number logical sequence comes next: 2, 6, 12, 20, 30, ?',
+    options: ['40', '42', '44', '46'],
+    correct_answer: 'B',
+    marks: 4,
+    negative_marks: 1,
     difficulty: 'medium',
   },
+
   {
     id: 'q4',
     exam_id: 'e1',
@@ -94,8 +90,74 @@ export default function ExamScreen({ onSubmit }: ExamScreenProps) {
   const currentQ = questions[currentIndex];
 
   useEffect(() => {
+    useFlagStore.getState().clearFlags();
     invoke('engage_lockdown').catch(() => {});
   }, []);
+
+  const handleFinalSubmit = () => {
+    let scoreObtained = 0;
+    let totalMaxMarks = 0;
+    const sectionMap: Record<string, { obtained: number; total: number }> = {};
+
+    questions.forEach((q) => {
+      const marks = q.marks || 1;
+      totalMaxMarks += marks;
+
+      if (!sectionMap[q.section]) {
+        sectionMap[q.section] = { obtained: 0, total: 0 };
+      }
+      sectionMap[q.section].total += marks;
+
+      const userAns = answers[q.id];
+      if (userAns !== undefined && userAns !== null && userAns !== '') {
+        let isCorrect = false;
+        if (q.type === 'mcq') {
+          const userStr = String(userAns).trim().toUpperCase();
+          const correctStr = String(q.correct_answer || '').trim().toUpperCase();
+          if (userStr === correctStr || (q.options && q.options[parseInt(userAns)] === q.correct_answer)) {
+            isCorrect = true;
+          }
+        } else if (q.type === 'numerical') {
+          const numVal = parseFloat(userAns);
+          const correctVal = parseFloat(q.correct_answer || '0');
+          const tol = q.tolerance || 0.05;
+          if (!isNaN(numVal) && Math.abs(numVal - correctVal) <= tol) {
+            isCorrect = true;
+          }
+        } else if (q.type === 'descriptive') {
+          if (String(userAns).trim().length >= 15) {
+            isCorrect = true;
+          }
+        }
+
+        if (isCorrect) {
+          scoreObtained += marks;
+          sectionMap[q.section].obtained += marks;
+        } else if (q.negative_marks) {
+          scoreObtained = Math.max(0, scoreObtained - q.negative_marks);
+        }
+      }
+    });
+
+    const percentage = totalMaxMarks > 0 ? Math.round((scoreObtained / totalMaxMarks) * 100) : 0;
+    const sectionBreakdown = Object.entries(sectionMap).map(([sec, val]) => ({
+      section: sec,
+      obtained: val.obtained,
+      total: val.total,
+      percentage: val.total > 0 ? Math.round((val.obtained / val.total) * 100) : 0,
+    }));
+
+    useExamStore.getState().setEvaluatedResults({
+      scoreObtained,
+      totalMaxMarks,
+      percentage,
+      answeredCount: Object.keys(answers).length,
+      totalQuestions: questions.length,
+      sectionBreakdown,
+    });
+
+    onSubmit();
+  };
 
   useEffect(() => {
     let refocusTimer: ReturnType<typeof setTimeout> | null = null;
@@ -125,14 +187,15 @@ export default function ExamScreen({ onSubmit }: ExamScreenProps) {
       setTimeLeft((t) => {
         if (t <= 1) {
           clearInterval(timer);
-          onSubmit();
+          handleFinalSubmit();
           return 0;
         }
         return t - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [onSubmit]);
+  }, []);
+
 
   const handleSelectQuestion = (index: number) => {
     setCurrentIndex(index);
@@ -242,13 +305,6 @@ export default function ExamScreen({ onSubmit }: ExamScreenProps) {
               <NumericalQuestion
                 question={currentQ}
                 value={answers[currentQ.id] || ''}
-                onChange={handleAnswer}
-              />
-            )}
-            {currentQ.type === 'coding' && (
-              <CodingQuestion
-                question={currentQ}
-                code={answers[currentQ.id] || ''}
                 onChange={handleAnswer}
               />
             )}
@@ -397,7 +453,7 @@ export default function ExamScreen({ onSubmit }: ExamScreenProps) {
               <button onClick={() => setShowConfirm(false)} style={styles.cancelBtn}>
                 Back to Questions
               </button>
-              <button onClick={onSubmit} style={styles.confirmSubmitBtn}>
+              <button onClick={handleFinalSubmit} style={styles.confirmSubmitBtn}>
                 Confirm & Submit Exam
               </button>
             </div>

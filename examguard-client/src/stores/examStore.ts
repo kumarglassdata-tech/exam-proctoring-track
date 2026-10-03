@@ -1,6 +1,20 @@
 import { create } from 'zustand';
 import { Question, NextQuestionResponse, AnswerSubmit } from '../lib/types';
 
+export interface EvaluatedResults {
+  scoreObtained: number;
+  totalMaxMarks: number;
+  percentage: number;
+  answeredCount: number;
+  totalQuestions: number;
+  sectionBreakdown: Array<{
+    section: string;
+    obtained: number;
+    total: number;
+    percentage: number;
+  }>;
+}
+
 interface ExamState {
   currentQuestion: Question | null;
   currentIndex: number;
@@ -12,9 +26,11 @@ interface ExamState {
   answers: Record<string, AnswerSubmit>;
   questionStartTime: number;
   isLockdownActive: boolean;
+  evaluatedResults: EvaluatedResults | null;
 
   setNextQuestion: (data: NextQuestionResponse) => void;
   saveAnswer: (questionId: string, response: string, languageId?: number) => void;
+  setEvaluatedResults: (results: EvaluatedResults) => void;
   tick: () => void;
   setTimeRemaining: (t: number) => void;
   activateLockdown: () => void;
@@ -33,6 +49,9 @@ export const useExamStore = create<ExamState>((set, get) => ({
   answers: {},
   questionStartTime: Date.now(),
   isLockdownActive: false,
+  evaluatedResults: null,
+  setEvaluatedResults: (results: EvaluatedResults) => set({ evaluatedResults: results }),
+
 
   setNextQuestion: (data: NextQuestionResponse) =>
     set({

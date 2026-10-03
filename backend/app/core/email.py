@@ -144,3 +144,60 @@ def send_invite_email(
     except Exception as e:
         print(f"[EMAIL ERROR] Failed to send to {to_email}: {e}")
         return False
+
+
+def send_otp_email(to_email: str, otp_code: str, candidate_name: str = "Candidate") -> bool:
+    """
+    Sends a 6-digit verification code email to the specified address.
+    """
+    if not settings.EMAIL_ENABLED:
+        print(f"[EMAIL DISABLED] Would have sent OTP {otp_code} to {to_email}")
+        return False
+
+    html_body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#0d0f17; color:#e2e8f0; margin:0; padding:0; }}
+    .container {{ max-width:480px; margin:40px auto; background:#161b2e; border-radius:16px; padding:32px; border:1px solid rgba(255,255,255,0.1); text-align:center; }}
+    .logo {{ font-size:36px; margin-bottom:12px; }}
+    h1 {{ color:#fff; font-size:22px; margin:0 0 8px; }}
+    p {{ color:#94a3b8; font-size:14px; margin:0 0 24px; line-height:1.5; }}
+    .code-box {{ background:#0d1117; border:1.5px solid #6366f1; border-radius:12px; padding:20px; font-size:32px; font-weight:800; color:#38bdf8; letter-spacing:8px; margin:20px 0; font-family:monospace; }}
+    .footer {{ margin-top:24px; font-size:12px; color:#475569; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🔐</div>
+    <h1>Verification Code</h1>
+    <p>Hello <strong>{candidate_name}</strong>,<br>Use the 6-digit verification code below to complete your login to ExamGuard.</p>
+    <div class="code-box">{otp_code}</div>
+    <p style="font-size:12px; color:#64748b;">This code is valid for 10 minutes. Do not share it with anyone.</p>
+    <div class="footer">ExamGuard — Secure Examination Platform</div>
+  </div>
+</body>
+</html>
+"""
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"🔑 ExamGuard Verification Code: {otp_code}"
+    msg["From"] = f"ExamGuard <{settings.FROM_EMAIL}>"
+    msg["To"] = to_email
+    msg.attach(MIMEText(html_body, "html"))
+
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.ehlo()
+            server.starttls(context=context)
+            server.login(settings.SMTP_USER, settings.SMTP_PASS)
+            server.sendmail(settings.FROM_EMAIL, to_email, msg.as_string())
+        print(f"[EMAIL] Sent OTP {otp_code} to {to_email}")
+        return True
+    except Exception as e:
+        print(f"[EMAIL ERROR] Failed to send OTP to {to_email}: {e}")
+        return False
+

@@ -9,7 +9,7 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
-type QType = "mcq" | "numerical" | "coding" | "descriptive";
+type QType = "mcq" | "numerical" | "descriptive";
 
 interface DraftQuestion {
   tempId: string;
@@ -24,8 +24,6 @@ interface DraftQuestion {
   correct_answer?: string;
   // Numerical
   tolerance?: number;
-  // Coding
-  test_cases?: { input: string; expected_output: string }[];
   // Descriptive
   model_answer?: string;
   min_words?: number;
@@ -35,16 +33,15 @@ interface DraftQuestion {
 const TYPE_LABELS: Record<QType, string> = {
   mcq: "Multiple Choice",
   numerical: "Numerical / Math",
-  coding: "LeetCode Coding",
   descriptive: "Descriptive Answer",
 };
 
 const TYPE_ICONS: Record<QType, React.ReactNode> = {
   mcq: <CheckSquare className="w-3.5 h-3.5" />,
   numerical: <Calculator className="w-3.5 h-3.5" />,
-  coding: <Code className="w-3.5 h-3.5" />,
   descriptive: <FileText className="w-3.5 h-3.5" />,
 };
+
 
 function emptyDraft(type: QType): DraftQuestion {
   return {
@@ -58,8 +55,8 @@ function emptyDraft(type: QType): DraftQuestion {
     options: type === "mcq" ? ["", "", "", ""] : undefined,
     correct_answer: type === "mcq" ? "A" : undefined,
     tolerance: type === "numerical" ? 0.01 : undefined,
-    test_cases: type === "coding" ? [{ input: "", expected_output: "" }] : undefined,
     model_answer: type === "descriptive" ? "" : undefined,
+
     min_words: type === "descriptive" ? 50 : undefined,
     max_words: type === "descriptive" ? 500 : undefined,
   };

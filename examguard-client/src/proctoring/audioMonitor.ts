@@ -12,18 +12,18 @@ let stream: MediaStream | null = null;
 let monitorInterval: ReturnType<typeof setInterval> | null = null;
 let sessionId: string | null = null;
 
-// Raised thresholds — only flag genuinely loud sounds
-const SPIKE_DB_THRESHOLD = -20;   // dB — louder than normal breathing/ambient
-const VOICE_DB_THRESHOLD = -25;   // dB — sustained speech-level sound
+const SPIKE_DB_THRESHOLD = -35;   // dB
+const VOICE_DB_THRESHOLD = -30;   // dB — speech-level sound
 let voiceFrameCount = 0;
-const VOICE_SUSTAINED_FRAMES = 14; // ~7 seconds at 500ms interval
+const VOICE_SUSTAINED_FRAMES = 3; // ~1.5s at 500ms interval
 
 // Per-type cooldown to avoid flag spam
 const lastFlagTime: Record<string, number> = {};
 const FLAG_COOLDOWN_MS: Record<string, number> = {
-  audio_spike: 5000,    // max 1 spike flag per 5 seconds
-  voice_detected: 10000, // max 1 voice flag per 10 seconds
+  audio_spike: 3000,    // max 1 spike flag per 3 seconds
+  voice_detected: 4000, // max 1 voice flag per 4 seconds
 };
+
 
 export async function startAudioMonitor(sid: string): Promise<void> {
   sessionId = sid;

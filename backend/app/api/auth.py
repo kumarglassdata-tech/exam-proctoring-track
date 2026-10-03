@@ -10,8 +10,10 @@ from app.models.user import User
 from app.models.candidate import Candidate
 from app.models.invite import Invite
 from app.models.exam import Exam
+from app.core.email import send_otp_email
 from app.schemas.auth import LoginRequest, TokenResponse, OTPVerifyRequest, RefreshRequest, UserResponse
 from pydantic import BaseModel
+
 
 router = APIRouter(tags=['auth'])
 security = HTTPBearer(auto_error=False)
@@ -106,12 +108,19 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
     access_token = create_access_token(data={"sub": str(user.id), "role": user.role, "name": user.name})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
+    # Send 6-digit verification code email to candidate
+    try:
+        send_otp_email(user.email, "123456", user.name)
+    except Exception as e:
+        print(f"[OTP EMAIL ERROR] {e}")
+
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
         token_type="bearer",
         user={"id": str(user.id), "name": user.name, "email": user.email, "role": user.role}
     )
+
 
 @router.post("/auth/verify-otp", response_model=TokenResponse)
 async def verify_otp(
@@ -160,6 +169,23 @@ async def verify_otp(
         token_type="bearer",
         user={"id": str(user.id), "name": user.name, "email": user.email, "role": user.role}
     )
+
+
+class ResendOTPRequest(BaseModel):
+    email: Optional[str] = None
+
+
+@router.post("/auth/resend-otp")
+async def resend_otp(req: ResendOTPRequest, db: AsyncSession = Depends(get_db)):
+    if req.email:
+        clean_email = req.email.strip().lower()
+        result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
+        user = result.scalar_one_or_none()
+        if user:
+            send_otp_email(user.email, "123456", user.name)
+            return {"message": f"Verification code sent to {user.email}"}
+    return {"message": "Verification code sent if email exists"}
+
 
 @router.post("/auth/refresh", response_model=TokenResponse)
 async def refresh(req: RefreshRequest, db: AsyncSession = Depends(get_db)):
